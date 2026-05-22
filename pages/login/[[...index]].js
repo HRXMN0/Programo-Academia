@@ -88,7 +88,6 @@ export default function Page() {
   const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle();
-      router.replace('/dashboard');
     } catch (err) {
       console.log(err);
     }

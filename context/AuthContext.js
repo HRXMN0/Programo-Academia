@@ -122,21 +122,8 @@ export function AuthProvider({ children }) {
       router.replace('/dashboard');
       return userCredential.user;
     } catch (error) {
-      // Auto-create account if the user does not exist
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        try {
-          const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
-          showToast('Account created and logged in automatically! 🎉');
-          router.replace('/dashboard');
-          return newUserCredential.user;
-        } catch (signUpError) {
-          showToast(signUpError.message, 'error');
-          throw signUpError;
-        }
-      } else {
-        showToast(error.message, 'error');
-        throw error;
-      }
+      showToast(error.message, 'error');
+      throw error;
     }
   };
 
