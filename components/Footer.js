@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import BrandLogo from './BrandLogo'
 
 export default function Footer() {
   return (
@@ -6,11 +7,7 @@ export default function Footer() {
       <div className="w-full max-w-container-max mx-auto border-t border-outline-variant dark:border-outline py-xl px-gutter flex flex-col md:flex-row justify-between items-center gap-md">
         <div>
           <Link href="/">
-            <img 
-              alt="Programo" 
-              className="h-8 object-contain rounded-md cursor-pointer" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz4YjFh4cM0U2k1t8ZK-QPd_z0YLRn8tvDp56lQ7MR5yvlqtwk-3sSIsuKq-CiMannQLTvv1VyTRyt9tOCIiLi5GcMbJSLJRRf1APKKbXdOjShbgN0mqF9nc375Gn0gncYZ-NY7aEt3zhjm2sQVhmY293OkoaUm5kKwtZjfivm6e7UKlqjdPzGtvb9Yhcn-TUX2rGTHDttDlI-JYRbgQmSnpvtW0NSM_6cysyx4qvSkmqYvxHyNq-Gaf1vKM0GGLvJjYurD-GLl7M" 
-            />
+            <BrandLogo variant="footer" />
           </Link>
         </div>
         <div className="flex flex-col items-center gap-2 justify-center">

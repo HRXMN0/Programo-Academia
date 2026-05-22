@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Script from 'next/script';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
+import BrandLogo from "@/components/BrandLogo";
 import RibbonBackground from "@/components/RibbonBackground";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -156,11 +157,7 @@ export default function Page() {
         <div className="w-full max-w-md bg-surface-container-lowest dark:bg-surface rounded-xl border border-outline-variant dark:border-outline shadow-[0px_4px_12px_rgba(11,31,58,0.05)] dark:shadow-[0px_12px_48px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-300 hover:shadow-[0px_8px_24px_rgba(11,31,58,0.08)]">
           <div className="p-lg">
             <div className="flex flex-col items-center mb-lg">
-              <img
-                alt="Programo Logo"
-                className="w-20 h-20 mb-base object-contain"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuASLKmmX4gA5u1SCOnayMh6Xxsv9dbTCkBRhKIJy3PNNwFZWCuUnouk5-PnVpji75P_fWMN7unld277x-dTHbVzmVSXCPRWtH-DR1rKBQiE5L0-tIXRoOUIQFhwOw_2DgeerSqZxiGfFpdiouFOHrK3fTDS9LitBJyXvjeX6WSsFlR1jKKHWdrajCFHx6Um6V1LdLlXXA1G-Nn26bgHbmXErFLU3C1mXPNXIYNS5cvgLSyHr1wlsDo2vEWoeRf4s-Pn6R9ZEgT4T4Q"
-              />
+              <BrandLogo variant="auth" className="mb-base" />
               <h1 className="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed text-center">Create Account</h1>
               <p className="font-body-md text-body-md text-on-surface-variant dark:text-outline text-center mt-base">Join the next generation of engineers.</p>
             </div>
@@ -278,9 +275,7 @@ export default function Page() {
 
       <footer className="relative z-10 w-full bg-surface/80 backdrop-blur-md dark:bg-surface-dim/80 mt-auto">
         <div className="w-full max-w-container-max mx-auto border-t border-outline-variant dark:border-outline py-xl px-gutter flex flex-col md:flex-row justify-between items-center gap-md">
-          <div className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed leading-tight text-left">
-            Programo<br />Academia
-          </div>
+          <BrandLogo variant="footer" />
           <div className="flex flex-col items-center gap-2 justify-center">
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-1">
               <a className="font-body-md text-body-md text-on-surface-variant dark:text-outline hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Curriculum</a>

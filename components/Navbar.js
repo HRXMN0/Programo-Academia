@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 
+import BrandLogo from './BrandLogo'
 import ThemeToggle from './ThemeToggle'
 
 export default function Navbar() {
@@ -36,11 +37,7 @@ export default function Navbar() {
         {/* Logo */}
         <div className="flex-shrink-0 flex items-center mr-md md:mr-lg">
           <Link href="/" className="flex items-center transition-transform duration-300 ease-out hover:scale-105 active:scale-[0.98]">
-            <img 
-              alt="Programo" 
-              className="h-9 md:h-12 w-auto rounded-md object-contain cursor-pointer" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz4YjFh4cM0U2k1t8ZK-QPd_z0YLRn8tvDp56lQ7MR5yvlqtwk-3sSIsuKq-CiMannQLTvv1VyTRyt9tOCIiLi5GcMbJSLJRRf1APKKbXdOjShbgN0mqF9nc375Gn0gncYZ-NY7aEt3zhjm2sQVhmY293OkoaUm5kKwtZjfivm6e7UKlqjdPzGtvb9Yhcn-TUX2rGTHDttDlI-JYRbgQmSnpvtW0NSM_6cysyx4qvSkmqYvxHyNq-Gaf1vKM0GGLvJjYurD-GLl7M" 
-            />
+            <BrandLogo variant="header" />
           </Link>
         </div>
 
