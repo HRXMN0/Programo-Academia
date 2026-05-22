@@ -3,6 +3,8 @@ import { useRouter } from 'next/router'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 
+import ThemeToggle from './ThemeToggle'
+
 export default function Navbar() {
   const router = useRouter()
   const { isLoggedIn, user, logout } = useAuth()
@@ -106,6 +108,9 @@ export default function Navbar() {
               disabled
             />
           </div>
+
+          <ThemeToggle />
+
           {isLoggedIn && user ? (
             <div className="flex items-center gap-sm relative" ref={profileDropdownRef}>
               <span className="hidden lg:inline text-label-md text-on-surface-variant font-medium">

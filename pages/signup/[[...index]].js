@@ -5,6 +5,7 @@ import Script from 'next/script';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
 import RibbonBackground from "@/components/RibbonBackground";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Page() {
   const router = useRouter();
@@ -128,8 +129,12 @@ export default function Page() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background text-on-background flex flex-col font-body-md antialiased">
+    <div className="relative min-h-screen overflow-hidden bg-background dark:bg-inverse-surface text-on-background dark:text-inverse-on-surface flex flex-col font-body-md antialiased">
       <RibbonBackground />
+
+      <div className="absolute top-gutter right-gutter z-50">
+        <ThemeToggle />
+      </div>
 
       <Head>
         <title>Sign Up - Programo Academia</title>
@@ -148,27 +153,27 @@ export default function Page() {
       />
 
       <main className="relative z-10 flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-md bg-surface-container-lowest rounded-xl border border-outline-variant p-lg shadow-sm">
+        <div className="w-full max-w-md bg-surface-container-lowest dark:bg-surface rounded-xl border border-outline-variant dark:border-outline p-lg shadow-sm dark:shadow-[0px_12px_48px_rgba(0,0,0,0.5)]">
           <div className="flex flex-col items-center mb-lg">
             <img
               alt="Programo Logo"
               className="h-16 w-16 mb-md object-contain rounded-xl"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuASLKmmX4gA5u1SCOnayMh6Xxsv9dbTCkBRhKIJy3PNNwFZWCuUnouk5-PnVpji75P_fWMN7unld277x-dTHbVzmVSXCPRWtH-DR1rKBQiE5L0-tIXRoOUIQFhwOw_2DgeerSqZxiGfFpdiouFOHrK3fTDS9LitBJyXvjeX6WSsFlR1jKKHWdrajCFHx6Um6V1LdLlXXA1G-Nn26bgHbmXErFLU3C1mXPNXIYNS5cvgLSyHr1wlsDo2vEWoeRf4s-Pn6R9ZEgT4T4Q"
             />
-            <h1 className="font-headline-lg text-headline-lg text-primary text-center">Create Account</h1>
-            <p className="font-body-md text-body-md text-on-surface-variant text-center mt-base">Join the next generation of engineers.</p>
+            <h1 className="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed text-center">Create Account</h1>
+            <p className="font-body-md text-body-md text-on-surface-variant dark:text-outline text-center mt-base">Join the next generation of engineers.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-md">
             {/* Full Name */}
             <div>
-              <label className="block font-label-md text-label-md text-on-surface mb-xs" htmlFor="fullName">Full Name</label>
+              <label className="block font-label-md text-label-md text-on-surface dark:text-inverse-on-surface mb-xs" htmlFor="fullName">Full Name</label>
               <div className="relative rounded-md input-glow transition-shadow duration-200">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none select-none">
                   <span className="material-symbols-outlined text-outline">person</span>
                 </div>
                 <input
-                  className="block w-full pl-10 sm:text-sm border-outline-variant rounded-md py-3 focus:ring-0 focus:border-secondary transition-colors duration-200 bg-surface-container-lowest text-on-surface"
+                  className="block w-full pl-10 sm:text-sm border-outline-variant dark:border-outline rounded-md py-3 focus:ring-0 focus:border-secondary transition-colors duration-200 bg-surface-container-lowest dark:bg-surface-dim text-on-surface dark:text-inverse-on-surface placeholder:text-outline/70 dark:placeholder:text-outline"
                   id="fullName"
                   name="fullName"
                   placeholder="Ada Lovelace"
@@ -182,13 +187,13 @@ export default function Page() {
 
             {/* Email */}
             <div>
-              <label className="block font-label-md text-label-md text-on-surface mb-xs" htmlFor="email">Email</label>
+              <label className="block font-label-md text-label-md text-on-surface dark:text-inverse-on-surface mb-xs" htmlFor="email">Email</label>
               <div className="relative rounded-md input-glow transition-shadow duration-200">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none select-none">
                   <span className="material-symbols-outlined text-outline">mail</span>
                 </div>
                 <input
-                  className="block w-full pl-10 sm:text-sm border-outline-variant rounded-md py-3 focus:ring-0 focus:border-secondary transition-colors duration-200 bg-surface-container-lowest text-on-surface"
+                  className="block w-full pl-10 sm:text-sm border-outline-variant dark:border-outline rounded-md py-3 focus:ring-0 focus:border-secondary transition-colors duration-200 bg-surface-container-lowest dark:bg-surface-dim text-on-surface dark:text-inverse-on-surface placeholder:text-outline/70 dark:placeholder:text-outline"
                   id="email"
                   name="email"
                   placeholder="you@example.com"
@@ -202,13 +207,13 @@ export default function Page() {
 
             {/* Password */}
             <div>
-              <label className="block font-label-md text-label-md text-on-surface mb-xs" htmlFor="password">Password</label>
+              <label className="block font-label-md text-label-md text-on-surface dark:text-inverse-on-surface mb-xs" htmlFor="password">Password</label>
               <div className="relative rounded-md input-glow transition-shadow duration-200">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none select-none">
                   <span className="material-symbols-outlined text-outline">lock</span>
                 </div>
                 <input
-                  className="block w-full pl-10 sm:text-sm border-outline-variant rounded-md py-3 focus:ring-0 focus:border-secondary transition-colors duration-200 bg-surface-container-lowest text-on-surface"
+                  className="block w-full pl-10 sm:text-sm border-outline-variant dark:border-outline rounded-md py-3 focus:ring-0 focus:border-secondary transition-colors duration-200 bg-surface-container-lowest dark:bg-surface-dim text-on-surface dark:text-inverse-on-surface placeholder:text-outline/70 dark:placeholder:text-outline"
                   id="password"
                   name="password"
                   placeholder="••••••••"
@@ -242,17 +247,17 @@ export default function Page() {
           <div className="mt-lg">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-outline-variant"></div>
+                <div className="w-full border-t border-outline-variant dark:border-outline"></div>
               </div>
               <div className="relative flex justify-center font-label-md text-label-md">
-                <span className="px-2 bg-surface-container-lowest text-on-surface-variant">Or continue with</span>
+                <span className="px-2 bg-surface-container-lowest dark:bg-surface text-on-surface-variant dark:text-outline">Or continue with</span>
               </div>
             </div>
 
             <div className="mt-md">
               <button
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center px-4 py-2.5 border border-outline-variant rounded-lg shadow-sm bg-surface-container-lowest text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors duration-200"
+                className="w-full flex items-center justify-center px-4 py-2.5 border border-outline-variant dark:border-outline rounded-lg shadow-sm bg-surface-container-lowest dark:bg-surface-dim text-sm font-medium text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-surface-low transition-colors duration-200"
                 type="button"
               >
                 <span className="material-symbols-outlined mr-2 text-on-surface select-none" style={{ fontSize: '20px' }}>travel_explore</span>
@@ -261,9 +266,9 @@ export default function Page() {
             </div>
           </div>
 
-          <p className="mt-lg text-center font-body-md text-body-md text-on-surface-variant">
+          <p className="mt-lg text-center font-body-md text-body-md text-on-surface-variant dark:text-outline">
             Already have an account?{' '}
-            <Link href="/login" className="font-medium text-secondary hover:text-on-secondary-container transition-colors duration-200">Login</Link>
+            <Link href="/login" className="font-medium text-secondary hover:text-secondary-fixed-dim transition-colors duration-200">Login</Link>
           </p>
         </div>
       </main>
@@ -275,14 +280,14 @@ export default function Page() {
           </div>
           <div className="flex flex-col items-center gap-2 justify-center">
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-1">
-              <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Curriculum</a>
-              <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</a>
-              <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Terms of Service</a>
+              <a className="font-body-md text-body-md text-on-surface-variant dark:text-outline hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Curriculum</a>
+              <a className="font-body-md text-body-md text-on-surface-variant dark:text-outline hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</a>
+              <a className="font-body-md text-body-md text-on-surface-variant dark:text-outline hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Terms of Service</a>
             </div>
-            <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Contact</a>
+            <a className="font-body-md text-body-md text-on-surface-variant dark:text-outline hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Contact</a>
           </div>
-          <div className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant text-center md:text-right">
-            © 2024 Programo Academia. Built for the next generation of<br />engineers.
+          <div className="font-body-md text-body-md text-on-surface-variant dark:text-outline text-center md:text-right">
+            © 2026 Programo Academia. Built for the next generation of<br />engineers.
           </div>
         </div>
       </footer>
