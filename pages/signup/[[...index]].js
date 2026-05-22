@@ -32,7 +32,7 @@ export default function Page() {
       if (window.turnstile) {
         try {
           window.turnstile.render('#turnstile-container', {
-            sitekey: '1x00000000000000000000AA', // Testing sitekey — replace with real key for production
+            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
             callback: (token) => {
               setTurnstileToken(token);
               setCaptchaError(null);
@@ -77,10 +77,43 @@ export default function Page() {
     }
     setCaptchaError(null);
     setLoading(true);
+
+    try {
+      const res = await fetch("/api/verify-turnstile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: turnstileToken })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        setCaptchaError('Captcha verification failed. Please try again.');
+        if (window.turnstile) {
+          window.turnstile.reset('#turnstile-container');
+        }
+        setTurnstileToken(null);
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      setCaptchaError('An error occurred during captcha verification. Please try again.');
+      if (window.turnstile) {
+        window.turnstile.reset('#turnstile-container');
+      }
+      setTurnstileToken(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       await signupWithEmail(email, password, fullName);
     } catch {
       // Error toast is shown by signupWithEmail
+      if (window.turnstile) {
+        window.turnstile.reset('#turnstile-container');
+      }
+      setTurnstileToken(null);
     } finally {
       setLoading(false);
     }
