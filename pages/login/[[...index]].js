@@ -146,7 +146,7 @@ export default function Page() {
       />
 
       <main className="relative z-10 flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-[420px] bg-surface-container-lowest dark:bg-surface rounded-xl border border-outline-variant dark:border-outline shadow-[0px_4px_12px_rgba(11,31,58,0.05)] dark:shadow-[0px_12px_48px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-300 hover:shadow-[0px_8px_24px_rgba(11,31,58,0.08)]">
+        <div className="w-full max-w-md bg-surface-container-lowest dark:bg-surface rounded-xl border border-outline-variant dark:border-outline shadow-[0px_4px_12px_rgba(11,31,58,0.05)] dark:shadow-[0px_12px_48px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-300 hover:shadow-[0px_8px_24px_rgba(11,31,58,0.08)]">
           <div className="p-lg flex flex-col items-center border-b border-outline-variant dark:border-outline bg-surface-bright/90 dark:bg-surface">
             <img
               alt="Programo Academia Logo"

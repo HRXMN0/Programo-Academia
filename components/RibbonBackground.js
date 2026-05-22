@@ -14,7 +14,7 @@ export default function RibbonBackground() {
       >
         <div 
           className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
-          style={{ animation: 'scroll-left 40s linear infinite' }}
+          style={{ animation: 'scroll-left 120s linear infinite' }}
         >
           <div className="flex whitespace-nowrap">
             {words.map((word, idx) => (
@@ -40,7 +40,7 @@ export default function RibbonBackground() {
       >
         <div 
           className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
-          style={{ animation: 'scroll-right 40s linear infinite' }}
+          style={{ animation: 'scroll-right 120s linear infinite' }}
         >
           <div className="flex whitespace-nowrap">
             {words.map((word, idx) => (
@@ -66,7 +66,7 @@ export default function RibbonBackground() {
       >
         <div 
           className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
-          style={{ animation: 'scroll-left 40s linear infinite' }}
+          style={{ animation: 'scroll-left 120s linear infinite' }}
         >
           <div className="flex whitespace-nowrap">
             {words.map((word, idx) => (
@@ -92,7 +92,7 @@ export default function RibbonBackground() {
       >
         <div 
           className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
-          style={{ animation: 'scroll-right 40s linear infinite' }}
+          style={{ animation: 'scroll-right 120s linear infinite' }}
         >
           <div className="flex whitespace-nowrap">
             {words.map((word, idx) => (
@@ -118,7 +118,7 @@ export default function RibbonBackground() {
       >
         <div 
           className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
-          style={{ animation: 'scroll-left 40s linear infinite' }}
+          style={{ animation: 'scroll-left 120s linear infinite' }}
         >
           <div className="flex whitespace-nowrap">
             {words.map((word, idx) => (
@@ -144,7 +144,7 @@ export default function RibbonBackground() {
       >
         <div 
           className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
-          style={{ animation: 'scroll-right 40s linear infinite' }}
+          style={{ animation: 'scroll-right 120s linear infinite' }}
         >
           <div className="flex whitespace-nowrap">
             {words.map((word, idx) => (
