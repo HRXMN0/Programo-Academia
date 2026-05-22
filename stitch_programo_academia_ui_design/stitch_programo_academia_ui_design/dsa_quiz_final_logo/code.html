@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quiz - Programo Academia</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#00201b",
+                        "primary-fixed-dim": "#b5c7ea",
+                        "on-tertiary-container": "#a87e59",
+                        "primary-fixed": "#d6e3ff",
+                        "on-surface-variant": "#44474d",
+                        "secondary-fixed": "#68fade",
+                        "inverse-on-surface": "#eff1f3",
+                        "inverse-surface": "#2d3133",
+                        "on-primary-container": "#7587a7",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary-fixed": "#071c36",
+                        "tertiary-fixed": "#ffdcc1",
+                        "on-secondary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#68fade",
+                        "on-surface": "#191c1e",
+                        "inverse-primary": "#b5c7ea",
+                        "on-primary-fixed-variant": "#364764",
+                        "on-secondary-fixed-variant": "#005045",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#4d5f7d",
+                        "surface": "#f7f9fb",
+                        "surface-container-highest": "#e0e3e5",
+                        "outline-variant": "#c4c6ce",
+                        "on-secondary-container": "#007162",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#2e1500",
+                        "tertiary-container": "#321800",
+                        "secondary": "#006b5c",
+                        "surface-container-high": "#e6e8ea",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d8dadc",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#613f20",
+                        "surface-container": "#eceef0",
+                        "on-background": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "tertiary-fixed-dim": "#eebd94",
+                        "secondary-fixed-dim": "#44ddc2",
+                        "surface-bright": "#f7f9fb",
+                        "tertiary": "#0d0400",
+                        "primary": "#000615",
+                        "outline": "#75777e",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#0b1f3a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "gutter": "24px",
+                        "sm": "12px",
+                        "container-max": "1280px",
+                        "md": "24px",
+                        "xl": "80px",
+                        "xs": "4px",
+                        "lg": "48px"
+                    },
+                    "fontFamily": {
+                        "code-block": ["JetBrains Mono"],
+                        "display-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "label-md": ["Geist"],
+                        "body-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "body-lg": ["Geist"]
+                    },
+                    "fontSize": {
+                        "code-block": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Geist', sans-serif; }
+        .option-card input:checked + div {
+            border-color: theme('colors.secondary');
+            box-shadow: 0 0 0 2px theme('colors.secondary-container');
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col pt-16">
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-gutter h-16 max-w-container-max mx-auto bg-surface-container-lowest border-b border-outline-variant flat no shadows">
+<img alt="Programo Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz4YjFh4cM0U2k1t8ZK-QPd_z0YLRn8tvDp56lQ7MR5yvlqtwk-3sSIsuKq-CiMannQLTvv1VyTRyt9tOCIiLi5GcMbJSLJRRf1APKKbXdOjShbgN0mqF9nc375Gn0gncYZ-NY7aEt3zhjm2sQVhmY293OkoaUm5kKwtZjfivm6e7UKlqjdPzGtvb9Yhcn-TUX2rGTHDttDlI-JYRbgQmSnpvtW0NSM_6cysyx4qvSkmqYvxHyNq-Gaf1vKM0GGLvJjYurD-GLl7M"/>
+<div class="hidden md:flex gap-md items-center">
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">C++</a>
+<a class="text-secondary border-b-2 border-secondary pb-1 font-label-md text-label-md hover:text-primary transition-colors" href="#">DSA</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors" href="#">Interview Prep</a>
+</div>
+<div class="flex items-center gap-base">
+<button class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-md py-base rounded hover:opacity-90 transition-opacity">Login</button>
+</div>
+</nav>
+<!-- Main Content Canvas - Centered Layout -->
+<main class="flex-grow flex items-center justify-center p-gutter">
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-xl border border-outline-variant p-lg flex flex-col gap-lg">
+<!-- Quiz Header / Progress (Optional Minimal Indicator) -->
+<div class="flex items-center justify-between border-b border-outline-variant pb-base">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-xs">Question 1 of 10</span>
+<span class="inline-block bg-surface-container px-sm py-xs rounded text-xs font-label-md text-on-surface-variant">Trees</span>
+</div>
+<!-- Question -->
+<div class="flex flex-col gap-md">
+<h1 class="font-headline-lg text-headline-lg text-primary">
+                    What is the time complexity of searching for an element in a balanced Binary Search Tree?
+                </h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Select the correct asymptotic time complexity bounds.</p>
+</div>
+<!-- Options Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<label class="option-card cursor-pointer relative group">
+<input class="peer sr-only" name="complexity" type="radio" value="o1"/>
+<div class="h-full border border-outline-variant rounded p-md bg-surface-container-lowest flex items-center gap-md transition-all hover:shadow-[0px_4px_12px_rgba(11,31,58,0.05)]">
+<div class="w-6 h-6 rounded-full border border-outline-variant flex items-center justify-center peer-checked:bg-secondary peer-checked:border-secondary">
+<span class="material-symbols-outlined text-[14px] text-on-secondary opacity-0 peer-checked:opacity-100">check</span>
+</div>
+<span class="font-code-block text-code-block text-on-background">O(1)</span>
+</div>
+</label>
+<label class="option-card cursor-pointer relative group">
+<input class="peer sr-only" name="complexity" type="radio" value="ologn"/>
+<div class="h-full border border-outline-variant rounded p-md bg-surface-container-lowest flex items-center gap-md transition-all hover:shadow-[0px_4px_12px_rgba(11,31,58,0.05)]">
+<div class="w-6 h-6 rounded-full border border-outline-variant flex items-center justify-center peer-checked:bg-secondary peer-checked:border-secondary">
+<span class="material-symbols-outlined text-[14px] text-on-secondary opacity-0 peer-checked:opacity-100">check</span>
+</div>
+<span class="font-code-block text-code-block text-on-background">O(log n)</span>
+</div>
+</label>
+<label class="option-card cursor-pointer relative group">
+<input class="peer sr-only" name="complexity" type="radio" value="on"/>
+<div class="h-full border border-outline-variant rounded p-md bg-surface-container-lowest flex items-center gap-md transition-all hover:shadow-[0px_4px_12px_rgba(11,31,58,0.05)]">
+<div class="w-6 h-6 rounded-full border border-outline-variant flex items-center justify-center peer-checked:bg-secondary peer-checked:border-secondary">
+<span class="material-symbols-outlined text-[14px] text-on-secondary opacity-0 peer-checked:opacity-100">check</span>
+</div>
+<span class="font-code-block text-code-block text-on-background">O(n)</span>
+</div>
+</label>
+<label class="option-card cursor-pointer relative group">
+<input class="peer sr-only" name="complexity" type="radio" value="onlogn"/>
+<div class="h-full border border-outline-variant rounded p-md bg-surface-container-lowest flex items-center gap-md transition-all hover:shadow-[0px_4px_12px_rgba(11,31,58,0.05)]">
+<div class="w-6 h-6 rounded-full border border-outline-variant flex items-center justify-center peer-checked:bg-secondary peer-checked:border-secondary">
+<span class="material-symbols-outlined text-[14px] text-on-secondary opacity-0 peer-checked:opacity-100">check</span>
+</div>
+<span class="font-code-block text-code-block text-on-background">O(n log n)</span>
+</div>
+</label>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-md pt-base border-t border-outline-variant">
+<button class="bg-secondary text-on-secondary font-label-md text-label-md px-xl py-sm rounded hover:opacity-90 transition-opacity w-full md:w-auto self-end">
+                    Submit Answer
+                </button>
+<!-- Feedback Area (Empty State) -->
+<div class="hidden rounded p-md border" id="feedback-area">
+<!-- Javascript will populate this -->
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl px-gutter flex flex-col md:flex-row justify-between items-center gap-md max-w-container-max mx-auto bg-surface border-t border-outline-variant flat no shadows mt-auto">
+<img alt="Programo Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz4YjFh4cM0U2k1t8ZK-QPd_z0YLRn8tvDp56lQ7MR5yvlqtwk-3sSIsuKq-CiMannQLTvv1VyTRyt9tOCIiLi5GcMbJSLJRRf1APKKbXdOjShbgN0mqF9nc375Gn0gncYZ-NY7aEt3zhjm2sQVhmY293OkoaUm5kKwtZjfivm6e7UKlqjdPzGtvb9Yhcn-TUX2rGTHDttDlI-JYRbgQmSnpvtW0NSM_6cysyx4qvSkmqYvxHyNq-Gaf1vKM0GGLvJjYurD-GLl7M"/>
+<div class="flex gap-md flex-wrap justify-center">
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-secondary transition-colors" href="#">Curriculum</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-secondary transition-colors" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-secondary transition-colors" href="#">Terms of Service</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-secondary transition-colors" href="#">Contact</a>
+</div>
+<div class="font-body-md text-body-md text-on-surface-variant">
+            © 2024 Programo Academia. Built for the next generation of engineers.
+        </div>
+</footer>
+<script>
+        // Simple micro-interaction for option selection visual update
+        document.querySelectorAll('input[name="complexity"]').forEach(input => {
+            input.addEventListener('change', (e) => {
+                // Remove custom focus rings from all
+                document.querySelectorAll('.option-card > div').forEach(el => {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                });
+                
+                // Add to checked (handled mostly by CSS peer-checked, but this adds extra visual pop if needed, or resets state)
+                if(e.target.checked) {
+                    // Optional JS logic here
+                }
+            });
+        });
+    </script>
+</body></html>
