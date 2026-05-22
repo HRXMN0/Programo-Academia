@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Script from 'next/script';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
-import RibbonBackground from '../../components/RibbonBackground';
+import RibbonBackground from "@/components/RibbonBackground";
 
 export default function Page() {
   const router = useRouter();
@@ -95,7 +95,7 @@ export default function Page() {
   };
 
   return (
-    <div className="relative overflow-hidden bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+    <div className="relative min-h-screen overflow-hidden bg-background text-on-background flex flex-col font-body-md antialiased selection:bg-secondary-container selection:text-on-secondary-container">
       <RibbonBackground />
 
       <Head>
@@ -107,7 +107,7 @@ export default function Page() {
         strategy="afterInteractive"
       />
 
-      <main className="relative z-10 flex-grow flex items-center justify-center py-xl px-gutter md:px-0">
+      <main className="relative z-10 flex items-center justify-center min-h-screen">
         <div className="w-full max-w-[420px] bg-surface-container-lowest rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(11,31,58,0.05)] overflow-hidden transition-all duration-300 hover:shadow-[0px_8px_24px_rgba(11,31,58,0.08)]">
           <div className="p-lg flex flex-col items-center border-b border-outline-variant bg-surface-bright">
             <img
@@ -221,16 +221,22 @@ export default function Page() {
         </div>
       </main>
 
-      <footer className="relative z-10 bg-surface dark:bg-surface-dim border-t border-outline-variant dark:border-outline w-full py-xl px-gutter flex flex-col md:flex-row justify-between items-center gap-md max-w-container-max mx-auto mt-auto">
-        <div className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Programo Academia</div>
-        <div className="flex flex-wrap justify-center gap-md">
-          <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Curriculum</a>
-          <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</a>
-          <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Terms of Service</a>
-          <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Contact</a>
-        </div>
-        <div className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant text-center md:text-right">
-          © 2024 Programo Academia. Built for the next generation of engineers.
+      <footer className="relative z-10 w-full bg-surface/80 backdrop-blur-md dark:bg-surface-dim/80 mt-auto">
+        <div className="w-full max-w-container-max mx-auto border-t border-outline-variant dark:border-outline py-xl px-gutter flex flex-col md:flex-row justify-between items-center gap-md">
+          <div className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed leading-tight text-left">
+            Programo<br />Academia
+          </div>
+          <div className="flex flex-col items-center gap-2 justify-center">
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-1">
+              <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Curriculum</a>
+              <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</a>
+              <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Terms of Service</a>
+            </div>
+            <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Contact</a>
+          </div>
+          <div className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant text-center md:text-right">
+            © 2024 Programo Academia. Built for the next generation of<br />engineers.
+          </div>
         </div>
       </footer>
     </div>

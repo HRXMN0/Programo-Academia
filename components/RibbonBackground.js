@@ -1,82 +1,165 @@
 import React from 'react';
 
 export default function RibbonBackground() {
-  // Generate a long repeating string to ensure it covers the width of the diagonal ribbons (180vw) without gaps.
-  const text = "PROGRAMO ACADEMIA  •  ".repeat(15);
+  const words = Array(35).fill("Programo Academia");
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
-      {/* Light gradient overlay above ribbons to soften contrast and ensure supreme form readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background/95 pointer-events-none z-[3]" />
-
-      {/* Ribbon 1: Soft Teal, Left-to-Right */}
+    <div 
+      className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
+      style={{ opacity: 0.4 }}
+    >
+      {/* Ribbon 1: top: 10%, rotate: +15deg, scroll-left */}
       <div 
-        className="absolute w-[180vw] left-[-40vw] top-[8%] py-3.5 bg-secondary/10 border-y border-secondary/10 rounded-[9999px] -rotate-[6deg] flex items-center overflow-hidden blur-[0.5px] z-[1]"
+        className="absolute w-[300%] left-[-25%] top-[10%] py-3 flex items-center overflow-hidden z-[1] bg-primary-container text-on-primary-container rounded-full"
+        style={{ transform: 'rotate(15deg)' }}
       >
-        <div className="flex whitespace-nowrap text-[11px] font-semibold tracking-[0.25em] text-on-secondary-container/20 uppercase">
-          <div className="flex animate-scroll-right gap-4">
-            <span>{text}</span>
-            <span>{text}</span>
+        <div 
+          className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
+          style={{ animation: 'scroll-left 40s linear infinite' }}
+        >
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
+          </div>
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Ribbon 2: Light Gray, Right-to-Left */}
+      {/* Ribbon 2: top: 25%, rotate: -15deg, scroll-right */}
       <div 
-        className="absolute w-[180vw] left-[-40vw] top-[24%] py-3.5 bg-surface-container-highest/20 border-y border-outline-variant/10 rounded-[9999px] rotate-[10deg] flex items-center overflow-hidden blur-[0.5px] z-[1]"
+        className="absolute w-[300%] left-[-25%] top-[25%] py-3 flex items-center overflow-hidden z-[2] bg-secondary-container text-on-secondary-container rounded-full"
+        style={{ transform: 'rotate(-15deg)' }}
       >
-        <div className="flex whitespace-nowrap text-[11px] font-semibold tracking-[0.25em] text-outline/25 uppercase">
-          <div className="flex animate-scroll-left gap-4">
-            <span>{text}</span>
-            <span>{text}</span>
+        <div 
+          className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
+          style={{ animation: 'scroll-right 40s linear infinite' }}
+        >
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
+          </div>
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Ribbon 3: Muted Dark Gray, Left-to-Right */}
+      {/* Ribbon 3: top: 45%, rotate: +15deg, scroll-left */}
       <div 
-        className="absolute w-[180vw] left-[-40vw] top-[42%] py-3.5 bg-on-surface/5 border-y border-outline/5 rounded-[9999px] -rotate-[10deg] flex items-center overflow-hidden blur-[0.5px] z-[2]"
+        className="absolute w-[300%] left-[-25%] top-[45%] py-3 flex items-center overflow-hidden z-[1] bg-primary text-on-primary rounded-full"
+        style={{ transform: 'rotate(15deg)' }}
       >
-        <div className="flex whitespace-nowrap text-[11px] font-semibold tracking-[0.25em] text-on-surface-variant/15 uppercase">
-          <div className="flex animate-scroll-right gap-4">
-            <span>{text}</span>
-            <span>{text}</span>
+        <div 
+          className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
+          style={{ animation: 'scroll-left 40s linear infinite' }}
+        >
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
+          </div>
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Ribbon 4: Soft Teal, Right-to-Left (hidden on mobile, showing 4 ribbons on small screens) */}
+      {/* Ribbon 4: top: 60%, rotate: -15deg, scroll-right */}
       <div 
-        className="absolute w-[180vw] left-[-40vw] top-[58%] py-3.5 bg-secondary/10 border-y border-secondary/10 rounded-[9999px] rotate-[6deg] hidden md:flex items-center overflow-hidden blur-[0.5px] z-[1]"
+        className="absolute w-[300%] left-[-25%] top-[60%] py-3 flex items-center overflow-hidden z-[2] bg-secondary text-on-secondary rounded-full"
+        style={{ transform: 'rotate(-15deg)' }}
       >
-        <div className="flex whitespace-nowrap text-[11px] font-semibold tracking-[0.25em] text-on-secondary-container/20 uppercase">
-          <div className="flex animate-scroll-left gap-4">
-            <span>{text}</span>
-            <span>{text}</span>
+        <div 
+          className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
+          style={{ animation: 'scroll-right 40s linear infinite' }}
+        >
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
+          </div>
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Ribbon 5: Light Gray, Left-to-Right (hidden on mobile, showing 4 ribbons on small screens) */}
+      {/* Ribbon 5: top: 75%, rotate: +15deg, scroll-left */}
       <div 
-        className="absolute w-[180vw] left-[-40vw] top-[74%] py-3.5 bg-surface-container-highest/20 border-y border-outline-variant/10 rounded-[9999px] -rotate-[14deg] hidden md:flex items-center overflow-hidden blur-[0.5px] z-[2]"
+        className="absolute w-[300%] left-[-25%] top-[75%] py-3 flex items-center overflow-hidden z-[1] bg-surface-container-highest text-primary rounded-full"
+        style={{ transform: 'rotate(15deg)' }}
       >
-        <div className="flex whitespace-nowrap text-[11px] font-semibold tracking-[0.25em] text-outline/25 uppercase">
-          <div className="flex animate-scroll-right gap-4">
-            <span>{text}</span>
-            <span>{text}</span>
+        <div 
+          className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
+          style={{ animation: 'scroll-left 40s linear infinite' }}
+        >
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
+          </div>
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Ribbon 6: Muted Dark Gray, Right-to-Left */}
+      {/* Ribbon 6: top: 90%, rotate: -15deg, scroll-right */}
       <div 
-        className="absolute w-[180vw] left-[-40vw] top-[88%] py-3.5 bg-on-surface/5 border-y border-outline/5 rounded-[9999px] rotate-[8deg] flex items-center overflow-hidden blur-[0.5px] z-[1]"
+        className="absolute w-[300%] left-[-25%] top-[90%] py-3 flex items-center overflow-hidden z-[2] bg-secondary-container text-on-secondary-container rounded-full"
+        style={{ transform: 'rotate(-15deg)' }}
       >
-        <div className="flex whitespace-nowrap text-[11px] font-semibold tracking-[0.25em] text-on-surface-variant/15 uppercase">
-          <div className="flex animate-scroll-left gap-4">
-            <span>{text}</span>
-            <span>{text}</span>
+        <div 
+          className="flex whitespace-nowrap text-[24px] font-bold tracking-[0.1em] uppercase"
+          style={{ animation: 'scroll-right 40s linear infinite' }}
+        >
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
+          </div>
+          <div className="flex whitespace-nowrap">
+            {words.map((word, idx) => (
+              <span key={idx} className="mx-8">
+                {word} •
+              </span>
+            ))}
           </div>
         </div>
       </div>
