@@ -41,6 +41,14 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        // ─── CRITICAL: Reset state synchronously BEFORE the async Firestore fetch ───
+        // This prevents the previous user's completedTopics/quizScores from
+        // bleeding into the new session during the getDoc round-trip.
+        setUser(null);
+        setCompletedTopics([]);
+        setQuizScores({});
+        setIsLoggedIn(false);
+
         try {
           const userRef = doc(db, 'users', firebaseUser.uid);
           const snapshot = await getDoc(userRef);
@@ -55,12 +63,21 @@ export function AuthProvider({ children }) {
               photoURL: firebaseUser.photoURL,
               createdAt: data.createdAt
             });
+            // Use safe fallbacks — doc may exist but fields may be missing
             setCompletedTopics(data.completedTopics || []);
             setQuizScores(data.quizScores || {});
             setIsLoggedIn(true);
           } else {
-            // New user — sync state immediately so UI isn't blank, then write doc
+            // New user — doc doesn't exist yet. Write it with clean empty arrays.
             const displayName = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User';
+            const newUserData = {
+              name: displayName,
+              email: firebaseUser.email || '',
+              completedTopics: [],
+              quizScores: {},
+              createdAt: new Date()
+            };
+            await setDoc(userRef, newUserData);
             setUser({
               id: firebaseUser.uid,
               uid: firebaseUser.uid,
@@ -69,18 +86,8 @@ export function AuthProvider({ children }) {
               photoURL: firebaseUser.photoURL,
               createdAt: new Date()
             });
-            setCompletedTopics([]);
-            setQuizScores({});
+            // State is already reset to [] and {} from the synchronous reset above
             setIsLoggedIn(true);
-            setIsLoaded(true);
-
-            await setDoc(userRef, {
-              name: displayName,
-              email: firebaseUser.email || '',
-              completedTopics: [],
-              quizScores: {},
-              createdAt: new Date()
-            });
           }
         } catch {
           // Auth setup failed — still mark as loaded to unblock UI
@@ -88,6 +95,7 @@ export function AuthProvider({ children }) {
           setIsLoaded(true);
         }
       } else {
+        // Logged out — wipe all user state
         setUser(null);
         setIsLoggedIn(false);
         setCompletedTopics([]);
@@ -136,8 +144,16 @@ export function AuthProvider({ children }) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: fullName });
+      // Write full user document — ensures completedTopics: [] and quizScores: {}
+      // are always present in Firestore for new accounts created via the signup form.
       const userRef = doc(db, 'users', userCredential.user.uid);
-      await setDoc(userRef, { name: fullName }, { merge: true });
+      await setDoc(userRef, {
+        name: fullName,
+        email: email,
+        completedTopics: [],
+        quizScores: {},
+        createdAt: new Date()
+      });
       showToast('Account created successfully! 🎉');
       router.replace('/dashboard');
       return userCredential.user;
