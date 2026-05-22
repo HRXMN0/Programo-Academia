@@ -62,3 +62,34 @@ html {
 .active-press:active {
   transform: scale(0.98);
 }
+
+/* Premium Marquee Ribbon Animations */
+@keyframes ribbonScrollLeft {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes ribbonScrollRight {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-scroll-left {
+  animation: ribbonScrollLeft 45s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.animate-scroll-right {
+  animation: ribbonScrollRight 45s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}

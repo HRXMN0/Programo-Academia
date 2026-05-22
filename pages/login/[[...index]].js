@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Script from 'next/script';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
+import RibbonBackground from '../../components/RibbonBackground';
 
 export default function Page() {
   const router = useRouter();
@@ -94,7 +95,9 @@ export default function Page() {
   };
 
   return (
-    <div className="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+    <div className="relative overflow-hidden bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+      <RibbonBackground />
+
       <Head>
         <title>Programo Academia - Login</title>
       </Head>
@@ -104,7 +107,7 @@ export default function Page() {
         strategy="afterInteractive"
       />
 
-      <main className="flex-grow flex items-center justify-center py-xl px-gutter md:px-0">
+      <main className="relative z-10 flex-grow flex items-center justify-center py-xl px-gutter md:px-0">
         <div className="w-full max-w-[420px] bg-surface-container-lowest rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(11,31,58,0.05)] overflow-hidden transition-all duration-300 hover:shadow-[0px_8px_24px_rgba(11,31,58,0.08)]">
           <div className="p-lg flex flex-col items-center border-b border-outline-variant bg-surface-bright">
             <img
@@ -218,7 +221,7 @@ export default function Page() {
         </div>
       </main>
 
-      <footer className="bg-surface dark:bg-surface-dim border-t border-outline-variant dark:border-outline w-full py-xl px-gutter flex flex-col md:flex-row justify-between items-center gap-md max-w-container-max mx-auto mt-auto">
+      <footer className="relative z-10 bg-surface dark:bg-surface-dim border-t border-outline-variant dark:border-outline w-full py-xl px-gutter flex flex-col md:flex-row justify-between items-center gap-md max-w-container-max mx-auto mt-auto">
         <div className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Programo Academia</div>
         <div className="flex flex-wrap justify-center gap-md">
           <a className="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant hover:text-secondary dark:hover:text-secondary-fixed transition-colors" href="#">Curriculum</a>
