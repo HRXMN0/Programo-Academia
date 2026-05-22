@@ -85,21 +85,13 @@ export default function Page() {
     }
   };
 
-  const handleGoogleClick = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle();
-    } catch {
-      // Error toast is shown by loginWithGoogle
-    } finally {
-      setLoading(false);
+      router.replace('/dashboard');
+    } catch (err) {
+      console.log(err);
     }
-  };
-
-  const handleGitHubClick = (e) => {
-    e.preventDefault();
-    showToast('GitHub login is not enabled.', 'info');
   };
 
   return (
@@ -222,27 +214,15 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="mt-md grid grid-cols-2 gap-3">
-              <div>
-                <a
-                  className="w-full flex items-center justify-center px-4 py-2 border border-outline-variant rounded-md shadow-sm bg-surface-container-lowest text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors duration-200"
-                  href="#"
-                  onClick={handleGitHubClick}
-                >
-                  <span className="material-symbols-outlined mr-2 text-on-surface select-none" style={{ fontSize: '20px' }}>code</span>
-                  GitHub
-                </a>
-              </div>
-              <div>
-                <a
-                  className="w-full flex items-center justify-center px-4 py-2 border border-outline-variant rounded-md shadow-sm bg-surface-container-lowest text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors duration-200"
-                  href="#"
-                  onClick={handleGoogleClick}
-                >
-                  <span className="material-symbols-outlined mr-2 text-on-surface select-none" style={{ fontSize: '20px' }}>travel_explore</span>
-                  Google
-                </a>
-              </div>
+            <div className="mt-md">
+              <button
+                onClick={handleGoogleLogin}
+                className="w-full flex items-center justify-center px-4 py-2.5 border border-outline-variant rounded-lg shadow-sm bg-surface-container-lowest text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors duration-200"
+                type="button"
+              >
+                <span className="material-symbols-outlined mr-2 text-on-surface select-none" style={{ fontSize: '20px' }}>travel_explore</span>
+                Continue with Google
+              </button>
             </div>
           </div>
 

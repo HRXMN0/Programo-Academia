@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function Page() {
   const router = useRouter();
-  const { loginWithEmail, isLoggedIn, isLoaded } = useAuth();
+  const { loginWithEmail, loginWithGoogle, isLoggedIn, isLoaded } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -82,6 +82,15 @@ export default function Page() {
       // Error toast is shown by loginWithEmail
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      router.replace('/dashboard');
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -173,11 +182,33 @@ export default function Page() {
                 >
                   <span>{loading ? 'Logging in...' : 'Login'}</span>
                   {!loading && (
-                    <span aria-hidden="true" className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                     <span aria-hidden="true" className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
                   )}
                 </button>
               </div>
             </form>
+
+            <div className="mt-lg">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-outline-variant"></div>
+                </div>
+                <div className="relative flex justify-center font-label-md text-label-md">
+                  <span className="px-2 bg-surface-container-lowest text-on-surface-variant">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="mt-md">
+                <button
+                  onClick={handleGoogleLogin}
+                  className="w-full flex items-center justify-center px-4 py-2.5 border border-outline-variant rounded-lg shadow-sm bg-surface-container-lowest text-sm font-medium text-on-surface hover:bg-surface-container-low transition-colors duration-200"
+                  type="button"
+                >
+                  <span className="material-symbols-outlined mr-2 text-on-surface select-none" style={{ fontSize: '20px' }}>travel_explore</span>
+                  Continue with Google
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="px-lg py-md bg-surface border-t border-outline-variant text-center">
