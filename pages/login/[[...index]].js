@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import Script from 'next/script';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
 import BrandLogo from "@/components/BrandLogo";
@@ -14,9 +14,11 @@ export default function Page() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState(null);
+  const [captchaToken, setCaptchaToken] = useState(null);
   const [captchaError, setCaptchaError] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  const recaptchaRef = useRef(null);
 
   // Redirect already-logged-in users immediately
   useEffect(() => {
@@ -24,41 +26,6 @@ export default function Page() {
       router.replace('/dashboard');
     }
   }, [isLoaded, isLoggedIn, router]);
-
-  // Turnstile widget init — must be declared before any early return (Rules of Hooks)
-  useEffect(() => {
-    if (!isLoaded || isLoggedIn) return; // Skip if redirecting
-
-    const initTurnstile = () => {
-      if (window.turnstile) {
-        try {
-          window.turnstile.render('#turnstile-container', {
-            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-            callback: (token) => {
-              setTurnstileToken(token);
-              setCaptchaError(null);
-            },
-            'expired-callback': () => setTurnstileToken(null),
-            'error-callback': () => setTurnstileToken(null),
-          });
-        } catch {
-          // Turnstile render failed silently
-        }
-      }
-    };
-
-    if (window.turnstile) {
-      initTurnstile();
-    } else {
-      const timer = setInterval(() => {
-        if (window.turnstile) {
-          initTurnstile();
-          clearInterval(timer);
-        }
-      }, 100);
-      return () => clearInterval(timer);
-    }
-  }, [isLoaded, isLoggedIn]);
 
   // Block rendering until auth is confirmed to prevent flicker
   if (!isLoaded || isLoggedIn) {
@@ -72,49 +39,45 @@ export default function Page() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!turnstileToken) {
-      setCaptchaError('Please verify you are human');
+    if (!captchaToken) {
+      setCaptchaError('Please complete captcha');
       return;
     }
     setCaptchaError(null);
     setLoading(true);
 
     try {
-      const res = await fetch("/api/verify-turnstile", {
+      const res = await fetch("/api/verify-recaptcha", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: turnstileToken })
+        body: JSON.stringify({ token: captchaToken })
       });
 
       const data = await res.json();
 
       if (!data.success) {
         setCaptchaError('Captcha verification failed. Please try again.');
-        if (window.turnstile) {
-          window.turnstile.reset('#turnstile-container');
-        }
-        setTurnstileToken(null);
+        if (recaptchaRef.current) recaptchaRef.current.reset();
+        setCaptchaToken(null);
         setLoading(false);
         return;
       }
     } catch (err) {
       setCaptchaError('An error occurred during captcha verification. Please try again.');
-      if (window.turnstile) {
-        window.turnstile.reset('#turnstile-container');
-      }
-      setTurnstileToken(null);
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setCaptchaToken(null);
       setLoading(false);
       return;
     }
 
     try {
       await loginWithEmail(email, password);
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setCaptchaToken(null);
     } catch {
       // Error toast is shown by loginWithEmail
-      if (window.turnstile) {
-        window.turnstile.reset('#turnstile-container');
-      }
-      setTurnstileToken(null);
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setCaptchaToken(null);
     } finally {
       setLoading(false);
     }
@@ -139,11 +102,7 @@ export default function Page() {
       <Head>
         <title>Programo Academia - Login</title>
       </Head>
-
-      <Script
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-        strategy="afterInteractive"
-      />      <main className="relative z-10 flex items-center justify-center min-h-screen p-4">
+      <main className="relative z-10 flex items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg overflow-hidden flex flex-col font-sans">
           
           {/* Top Bar */}
@@ -207,14 +166,14 @@ export default function Page() {
                   <div className="pt-2">
                     <button
                       type="submit"
-                      disabled={loading || !email || !password || !turnstileToken}
+                      disabled={loading || !email || !password || !captchaToken}
                       className={`w-full font-medium py-3 rounded-full transition-all duration-300 ${
-                        email && password && turnstileToken
+                        email && password && captchaToken
                           ? 'bg-secondary hover:bg-secondary/90 text-on-secondary shadow-md hover:scale-[1.02] active:scale-[0.98]'
                           : 'bg-gray-300 text-white opacity-50 cursor-not-allowed'
                       }`}
                     >
-                      {loading ? 'Logging in...' : 'Log in'}
+                      {loading ? 'Verifying...' : 'Log in'}
                     </button>
                   </div>
                 </form>
@@ -268,9 +227,17 @@ export default function Page() {
             <div className="mt-12 flex flex-col items-center">
               <a href="#" className="text-xs font-semibold text-gray-700 underline mb-6">Can't log in?</a>
               
-              {/* Turnstile Captcha Container */}
-              <div className="flex flex-col items-center mb-4 min-h-[65px]">
-                <div id="turnstile-container"></div>
+              {/* reCAPTCHA Container */}
+              <div className="flex flex-col items-center mb-4 min-h-[78px]">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                  onChange={(token) => {
+                    setCaptchaToken(token);
+                    setCaptchaError(null);
+                  }}
+                  onExpired={() => setCaptchaToken(null)}
+                />
                 {captchaError && (
                   <p className="text-red-500 text-center text-xs mt-2">{captchaError}</p>
                 )}
