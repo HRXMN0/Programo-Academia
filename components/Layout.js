@@ -5,6 +5,13 @@ import { useRouter } from 'next/router'
 import { useAuth } from '../context/AuthContext'
 import Script from 'next/script'
 
+
+export const metadata = {
+  title: "Programo Academia - Learn Coding, DSA & All Tech in One Place",
+  description:
+    "Learn programming, DSA, and all major technologies. Practice coding with our built-in compiler and boost your skills with AI assistance.",
+};
+
 export default function Layout({ children }) {
   const router = useRouter()
   const { toast } = useAuth()
