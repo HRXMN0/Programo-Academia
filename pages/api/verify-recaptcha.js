@@ -8,9 +8,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: 'Token is required' });
   }
 
-  const secretKey = process.env.TURNSTILE_SECRET_KEY;
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY;
   if (!secretKey) {
-    console.error('Missing TURNSTILE_SECRET_KEY in environment variables.');
+    console.error('Missing RECAPTCHA_SECRET_KEY in environment variables.');
     return res.status(500).json({ success: false, error: 'Server configuration error' });
   }
 
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     params.append("secret", secretKey);
     params.append("response", token);
 
-    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    console.log("TURNSTILE RESPONSE:", data);
+    console.log("RECAPTCHA RESPONSE:", data);
 
     if (!data.success) {
       return res.status(400).json({ 
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Error verifying Turnstile token:', error);
+    console.error('Error verifying reCAPTCHA token:', error);
     return res.status(500).json({ success: false, error: 'Failed to verify captcha' });
   }
 }
