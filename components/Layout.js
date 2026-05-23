@@ -4,6 +4,7 @@ import Chatbot from './Chatbot'
 import { useRouter } from 'next/router'
 import { useAuth } from '../context/AuthContext'
 import Script from 'next/script'
+import { Analytics } from "@vercel/analytics/next"
 
 
 export const metadata = {
@@ -61,3 +62,7 @@ export default function Layout({ children }) {
     </div>
   )
 }
+<body>
+  {children}
+  <Analytics />
+</body>
