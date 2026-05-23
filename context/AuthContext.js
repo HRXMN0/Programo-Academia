@@ -179,7 +179,7 @@ export function AuthProvider({ children }) {
   const toggleTopicCompletion = async (topicId) => {
     if (!isLoggedIn || !user) {
       showToast('Please login to continue', 'info');
-      setTimeout(() => { router.replace('/login'); }, 1000);
+      router.push('/login');
       return;
     }
 

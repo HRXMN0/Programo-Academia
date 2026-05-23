@@ -3,6 +3,7 @@ import Footer from './Footer'
 import Chatbot from './Chatbot'
 import { useRouter } from 'next/router'
 import { useAuth } from '../context/AuthContext'
+import Script from 'next/script'
 
 export default function Layout({ children }) {
   const router = useRouter()
@@ -18,6 +19,10 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+        strategy="afterInteractive"
+      />
       {!isAuth && <Navbar />}
       <main className={`flex-grow flex flex-col ${!isAuth ? 'pt-16' : ''}`}>
         {children}

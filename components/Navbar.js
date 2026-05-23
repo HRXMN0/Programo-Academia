@@ -42,7 +42,7 @@ export default function Navbar() {
         </div>
 
         {/* Centered Navigation */}
-        <nav className="hidden md:flex items-center justify-center flex-grow gap-lg xl:gap-xl h-full">
+        <nav className="hidden md:flex items-center justify-center flex-grow gap-md xl:gap-lg h-full">
           {/* Programming Languages Dropdown */}
           <div 
             className="relative h-full flex items-center"
@@ -91,6 +91,15 @@ export default function Navbar() {
               : 'text-on-surface-variant opacity-75 hover:opacity-100 hover:text-primary'
           }`}>
             Interview Prep
+          </Link>
+
+          {/* Code Runner */}
+          <Link href="/compiler" className={`font-body-md text-[16px] transition-all duration-300 ease-in-out hover:scale-[1.03] hover:underline underline-offset-4 decoration-primary/30 hover:decoration-primary tracking-wide ${
+            isActive('/compiler') 
+              ? 'text-primary font-bold underline decoration-primary decoration-2' 
+              : 'text-on-surface-variant opacity-75 hover:opacity-100 hover:text-primary'
+          }`}>
+            Code Runner
           </Link>
         </nav>
 
@@ -156,7 +165,10 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center">
-              <Link href="/login" className="border border-outline-variant hover:border-primary/50 hover:bg-surface-container-low text-on-surface-variant hover:text-primary font-label-md text-label-md px-md py-1.5 rounded-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-sm font-semibold">
+              <Link 
+                href="/login"
+                className="border border-outline-variant hover:border-primary/50 hover:bg-surface-container-low text-on-surface-variant hover:text-primary font-label-md text-label-md px-md py-1.5 rounded-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-sm font-semibold focus:outline-none flex items-center justify-center"
+              >
                 Login
               </Link>
             </div>
@@ -206,6 +218,16 @@ export default function Navbar() {
             }`}
           >
             <span>Interview Prep</span>
+            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+          </Link>
+          <Link 
+            href="/compiler" 
+            onClick={() => setMobileMenuOpen(false)}
+            className={`font-label-md text-label-md py-sm border-b border-outline-variant/30 flex items-center justify-between ${
+              isActive('/compiler') ? 'text-primary font-bold' : 'text-on-surface-variant opacity-75'
+            }`}
+          >
+            <span>Code Runner</span>
             <span className="material-symbols-outlined text-[18px]">chevron_right</span>
           </Link>
         </div>

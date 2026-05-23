@@ -79,7 +79,9 @@ module.exports = {
         "label-md": ["Geist", "sans-serif"],
         "body-md": ["Geist", "sans-serif"],
         "headline-md": ["Geist", "sans-serif"],
+        "headline-sm": ["Geist", "sans-serif"],
         "headline-lg-mobile": ["Geist", "sans-serif"],
+        "body-sm": ["Geist", "sans-serif"],
         "body-lg": ["Geist", "sans-serif"]
       },
       fontSize: {
@@ -89,6 +91,7 @@ module.exports = {
         "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "500" }],
         "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
         "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+        "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }],
         "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "600" }],
         "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }]
       }
