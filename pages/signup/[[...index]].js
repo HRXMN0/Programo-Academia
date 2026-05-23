@@ -74,10 +74,15 @@ export default function Page() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!turnstileToken) {
+    
+    // Get fresh token directly from the widget to ensure it hasn't expired silently
+    const token = window.turnstile ? window.turnstile.getResponse() : null;
+
+    if (!token) {
       setCaptchaError('Please verify you are human');
       return;
     }
+    
     setCaptchaError(null);
     setLoading(true);
 
@@ -85,15 +90,16 @@ export default function Page() {
       const res = await fetch("/api/verify-turnstile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: turnstileToken })
+        body: JSON.stringify({ token })
       });
 
       const data = await res.json();
 
       if (!data.success) {
+        console.error("Turnstile verification failed with error codes:", data.errorCodes);
         setCaptchaError('Captcha verification failed. Please try again.');
         if (window.turnstile) {
-          window.turnstile.reset('#turnstile-container');
+          window.turnstile.reset();
         }
         setTurnstileToken(null);
         setLoading(false);
@@ -102,7 +108,7 @@ export default function Page() {
     } catch (err) {
       setCaptchaError('An error occurred during captcha verification. Please try again.');
       if (window.turnstile) {
-        window.turnstile.reset('#turnstile-container');
+        window.turnstile.reset();
       }
       setTurnstileToken(null);
       setLoading(false);
@@ -111,10 +117,15 @@ export default function Page() {
 
     try {
       await signupWithEmail(email, password, fullName);
+      // Reset after successful submission to prevent token reuse if user stays on page
+      if (window.turnstile) {
+        window.turnstile.reset();
+      }
+      setTurnstileToken(null);
     } catch {
       // Error toast is shown by signupWithEmail
       if (window.turnstile) {
-        window.turnstile.reset('#turnstile-container');
+        window.turnstile.reset();
       }
       setTurnstileToken(null);
     } finally {

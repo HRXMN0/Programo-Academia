@@ -15,21 +15,26 @@ export default async function handler(req, res) {
   }
 
   try {
+    const params = new URLSearchParams();
+    params.append("secret", secretKey);
+    params.append("response", token);
+
     const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
-        secret: secretKey,
-        response: token,
-      }),
+      body: params,
     });
 
     const data = await response.json();
+    console.log("TURNSTILE RESPONSE:", data);
 
     if (!data.success) {
-      return res.status(400).json({ success: false, 'error-codes': data['error-codes'] });
+      return res.status(400).json({ 
+        success: false, 
+        errorCodes: data['error-codes'] 
+      });
     }
 
     return res.status(200).json({ success: true });
