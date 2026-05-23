@@ -227,7 +227,7 @@ export default function Navbar() {
               isActive('/compiler') ? 'text-primary font-bold' : 'text-on-surface-variant opacity-75'
             }`}
           >
-            <span>Code Runner</span>
+            <span>ONLINE COMPILER</span>
             <span className="material-symbols-outlined text-[18px]">chevron_right</span>
           </Link>
         </div>
