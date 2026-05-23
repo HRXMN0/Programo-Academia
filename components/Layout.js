@@ -62,7 +62,3 @@ export default function Layout({ children }) {
     </div>
   )
 }
-<body>
-  {children}
-  <Analytics />
-</body>
