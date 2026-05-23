@@ -5,6 +5,7 @@ export default function Document() {
     <Html lang="en" className="light">
       <Head>
         <meta charSet="utf-8" />
+        <meta name="google-site-verification" content="Vk7ZO-2b603feypIlRnsnZwy6YbVf4uCdbq1cbE-5eU" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
