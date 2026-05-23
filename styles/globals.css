@@ -151,3 +151,20 @@ html {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Fullscreen Compiler Styles */
+body.fullscreen-compiler footer {
+  display: none !important;
+}
+
+body.fullscreen-compiler .compiler-nav-default {
+  display: none !important;
+}
+
+.compiler-nav-fullscreen {
+  display: none !important;
+}
+
+body.fullscreen-compiler .compiler-nav-fullscreen {
+  display: flex !important;
+}

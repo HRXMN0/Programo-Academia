@@ -42,7 +42,7 @@ export default function Navbar() {
         </div>
 
         {/* Centered Navigation */}
-        <nav className="hidden md:flex items-center justify-center gap-md xl:gap-lg h-full">
+        <nav className="hidden md:flex items-center justify-center gap-md xl:gap-lg h-full compiler-nav-default">
           {/* Programming Languages Dropdown */}
           <div 
             className="relative h-full flex items-center"
@@ -92,6 +92,14 @@ export default function Navbar() {
           }`}>
             Interview Prep
           </Link>
+        </nav>
+
+        {/* Fullscreen Compiler Navigation */}
+        <nav className="hidden items-center justify-center gap-md xl:gap-lg h-full compiler-nav-fullscreen w-full md:w-auto absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
+          <span className="font-body-md text-[16px] text-primary font-bold tracking-wide flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+            Online Compiler
+          </span>
         </nav>
 
         {/* Right Section */}
