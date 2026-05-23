@@ -33,16 +33,16 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest border-b border-outline-variant transition-all duration-300">
-      <div className="max-w-container-max mx-auto px-gutter h-16 flex justify-between items-center gap-md">
+      <div className="w-full px-4 md:px-8 lg:px-12 h-16 flex justify-between items-center gap-md">
         {/* Logo */}
-        <div className="flex-shrink-0 flex items-center mr-md md:mr-lg">
+        <div className="flex-1 flex items-center">
           <Link href="/" className="flex items-center transition-transform duration-300 ease-out hover:scale-105 active:scale-[0.98]">
             <BrandLogo variant="header" />
           </Link>
         </div>
 
         {/* Centered Navigation */}
-        <nav className="hidden md:flex items-center justify-center flex-grow gap-md xl:gap-lg h-full">
+        <nav className="hidden md:flex items-center justify-center gap-md xl:gap-lg h-full">
           {/* Programming Languages Dropdown */}
           <div 
             className="relative h-full flex items-center"
@@ -92,29 +92,10 @@ export default function Navbar() {
           }`}>
             Interview Prep
           </Link>
-
-          {/* Code Runner */}
-          <Link href="/compiler" className={`font-body-md text-[16px] transition-all duration-300 ease-in-out hover:scale-[1.03] hover:underline underline-offset-4 decoration-primary/30 hover:decoration-primary tracking-wide ${
-            isActive('/compiler') 
-              ? 'text-primary font-bold underline decoration-primary decoration-2' 
-              : 'text-on-surface-variant opacity-75 hover:opacity-100 hover:text-primary'
-          }`}>
-            Code Runner
-          </Link>
         </nav>
 
         {/* Right Section */}
-        <div className="flex items-center justify-end gap-md flex-shrink-0">
-          <div className="hidden md:flex items-center bg-surface-container-low px-sm py-xs rounded-full border border-outline-variant focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20 transition-all">
-            <span className="material-symbols-outlined text-on-surface-variant text-sm mr-2" style={{ fontSize: '18px' }}>search</span>
-            <input 
-              type="text" 
-              placeholder="Search topics..." 
-              className="bg-transparent border-none focus:ring-0 font-label-md text-label-md text-on-surface placeholder:text-on-surface-variant w-36 lg:w-44 p-0"
-              disabled
-            />
-          </div>
-
+        <div className="flex-1 flex items-center justify-end gap-md">
           <ThemeToggle />
 
           {isLoggedIn && user ? (
@@ -167,9 +148,13 @@ export default function Navbar() {
             <div className="flex items-center">
               <Link 
                 href="/login"
-                className="border border-outline-variant hover:border-primary/50 hover:bg-surface-container-low text-on-surface-variant hover:text-primary font-label-md text-label-md px-md py-1.5 rounded-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-sm font-semibold focus:outline-none flex items-center justify-center"
+                className="group relative inline-flex items-center justify-center overflow-hidden rounded-full px-5 py-2 font-label-md font-bold text-on-secondary bg-secondary hover:bg-secondary/90 transition-all duration-300 hover:scale-[1.02] shadow-[0_4px_12px_rgba(0,107,92,0.3)] hover:shadow-[0_6px_16px_rgba(0,107,92,0.4)] active:scale-[0.98]"
               >
-                Login
+                <span className="absolute inset-0 bg-[linear-gradient(to_right,transparent,rgba(255,255,255,0.2),transparent)] translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></span>
+                <span className="relative z-10 flex items-center gap-1.5">
+                  Login
+                  <span className="material-symbols-outlined text-[16px] transition-transform duration-300 group-hover:translate-x-1">login</span>
+                </span>
               </Link>
             </div>
           )}
@@ -218,16 +203,6 @@ export default function Navbar() {
             }`}
           >
             <span>Interview Prep</span>
-            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-          </Link>
-          <Link 
-            href="/compiler" 
-            onClick={() => setMobileMenuOpen(false)}
-            className={`font-label-md text-label-md py-sm border-b border-outline-variant/30 flex items-center justify-between ${
-              isActive('/compiler') ? 'text-primary font-bold' : 'text-on-surface-variant opacity-75'
-            }`}
-          >
-            <span>ONLINE COMPILER</span>
             <span className="material-symbols-outlined text-[18px]">chevron_right</span>
           </Link>
         </div>

@@ -3,25 +3,25 @@ const authLogoSrc = 'https://lh3.googleusercontent.com/aida-public/AB6AXuASLKmmX
 
 const variants = {
   header: {
-    root: 'gap-2.5',
+    root: 'gap-3',
     src: mainLogoSrc,
-    mark: 'h-8 w-auto',
-    programo: 'text-lg',
-    academia: 'text-[0.58rem] tracking-[0.32em]',
+    mark: 'h-10 w-auto',
+    programo: 'text-xl text-primary dark:text-primary-fixed',
+    academia: 'text-[0.65rem] tracking-[0.33em] text-on-surface-variant dark:text-outline',
   },
   footer: {
     root: 'gap-3',
     src: mainLogoSrc,
     mark: 'h-10 w-auto',
-    programo: 'text-xl',
-    academia: 'text-xs tracking-[0.34em]',
+    programo: 'text-xl text-primary dark:text-primary-fixed',
+    academia: 'text-xs tracking-[0.34em] text-on-surface-variant dark:text-outline',
   },
   auth: {
     root: 'gap-3',
     src: authLogoSrc,
     mark: 'h-16 w-auto',
-    programo: 'text-2xl',
-    academia: 'text-sm tracking-[0.34em]',
+    programo: 'text-2xl text-[#0b1f3a]',
+    academia: 'text-sm tracking-[0.34em] text-[#44474d]',
   },
 }
 
@@ -38,10 +38,10 @@ export default function BrandLogo({ variant = 'header', className = '' }) {
       />
 
       <div className="flex flex-col leading-none">
-        <span className={`font-semibold tracking-normal text-primary dark:text-primary-fixed ${styles.programo}`}>
+        <span className={`font-semibold tracking-normal ${styles.programo}`}>
           Programo
         </span>
-        <span className={`mt-1 uppercase text-on-surface-variant dark:text-outline ${styles.academia}`}>
+        <span className={`mt-1 uppercase ${styles.academia}`}>
           Academia
         </span>
       </div>

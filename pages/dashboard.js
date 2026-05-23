@@ -9,7 +9,7 @@ import { db } from '../lib/firebase'
 
 export default function Dashboard() {
   const router = useRouter()
-  const { isLoggedIn, isLoaded, user, completedTopics: authCompletedTopics = [], quizScores: authQuizScores = {} } = useAuth()
+  const { user, completedTopics: authCompletedTopics = [], quizScores: authQuizScores = {} } = useAuth()
 
   // Local state — seeded from AuthContext, kept fresh by onSnapshot
   const [completedTopics, setCompletedTopics] = useState(authCompletedTopics || [])
@@ -31,23 +31,6 @@ export default function Dashboard() {
     return () => unsubscribe()
   }, [user?.uid])
 
-  useEffect(() => {
-    if (isLoaded && !isLoggedIn) {
-      router.replace('/login')
-    }
-  }, [isLoaded, isLoggedIn, router])
-
-  if (!isLoaded || !isLoggedIn) {
-    const loadingMessage = (isLoaded && !isLoggedIn) ? "Redirecting..." : "Loading your dashboard...";
-    return (
-      <main className="flex-grow flex items-center justify-center bg-background min-h-[70vh]">
-        <div className="flex flex-col items-center gap-md">
-          <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin"></div>
-          <p className="font-label-md text-label-md text-on-surface-variant animate-pulse">{loadingMessage}</p>
-        </div>
-      </main>
-    )
-  }
 
   // Progress metrics
   const dsaTopics = topics.filter(t => t.track === 'dsa')

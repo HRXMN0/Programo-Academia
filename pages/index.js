@@ -1,5 +1,5 @@
 import Link from 'next/link'
-
+import HomeSearchBar from '../components/HomeSearchBar'
 export default function Home() {
   const languages = [
     { name: 'C++', icon: (
@@ -61,6 +61,9 @@ export default function Home() {
 
           {/* Container Wrapper */}
           <div className="w-full max-w-[1200px] mx-auto px-6 md:px-8 lg:px-12 relative z-10 flex flex-col items-center gap-lg text-center">
+            {/* Search Bar Component */}
+            <HomeSearchBar />
+
             <span className="relative bg-surface-container-high text-on-surface-variant font-label-md text-label-md px-sm py-xs rounded-full inline-block border border-outline-variant">
               {/* Pulsing indicator badge */}
               <span className="absolute -left-1 -top-1 flex h-3 w-3">
@@ -69,17 +72,18 @@ export default function Home() {
               </span>
               Structured for Success
             </span>
+
             <h1 className="font-display-lg text-display-lg md:text-5xl lg:text-display-lg text-primary tracking-tight font-bold">
               Master DSA with <span className="bg-gradient-to-r from-secondary via-[#008d7c] to-[#0b1f3a] dark:from-secondary-fixed dark:to-primary-fixed bg-clip-text text-transparent">Clarity</span>
             </h1>
             <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
               Structured learning paths designed for modern engineers. Master patterns, not just problems.
             </p>
-            <div className="flex flex-col sm:flex-row gap-sm pt-sm w-full sm:w-auto justify-center">
-              <Link href="/dsa" className="bg-secondary text-on-secondary font-label-md text-label-md px-xl py-sm rounded shadow-[0_0_20px_rgba(0,107,92,0.2)] dark:shadow-[0_0_20px_rgba(104,250,222,0.15)] transition-all duration-300 hover:scale-105 hover:bg-secondary/90 active:scale-95 flex items-center justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 pt-sm w-full sm:w-auto justify-center items-center">
+              <Link href="/dsa" className="w-full sm:w-[240px] bg-secondary text-on-secondary font-label-md text-label-md px-4 py-3 rounded shadow-[0_0_20px_rgba(0,107,92,0.2)] dark:shadow-[0_0_20px_rgba(104,250,222,0.15)] transition-all duration-300 hover:scale-[1.02] hover:bg-secondary/90 active:scale-[0.98] flex items-center justify-center">
                 Start Learning
               </Link>
-              <Link href="/dsa" className="border border-primary/80 dark:border-primary-fixed/80 text-primary dark:text-primary-fixed bg-transparent font-label-md text-label-md px-xl py-sm rounded transition-all duration-300 hover:scale-105 hover:border-primary dark:hover:border-primary-fixed hover:bg-surface-container-low dark:hover:bg-surface-high hover:shadow-[0_0_15px_rgba(11,31,58,0.06)] active:scale-95 flex items-center justify-center">
+              <Link href="/dsa" className="w-full sm:w-[240px] border border-primary/80 dark:border-primary-fixed/80 text-primary dark:text-primary-fixed bg-transparent font-label-md text-label-md px-4 py-3 rounded transition-all duration-300 hover:scale-[1.02] hover:border-primary dark:hover:border-primary-fixed hover:bg-surface-container-low dark:hover:bg-surface-high hover:shadow-[0_0_15px_rgba(11,31,58,0.06)] active:scale-[0.98] flex items-center justify-center">
                 Explore Curriculum
               </Link>
             </div>
@@ -144,6 +148,14 @@ export default function Home() {
                         {"\n"}{"}"}
                       </code>
                     </pre>
+                    {/* Try it Live Interactive Button */}
+                    <div className="absolute bottom-4 right-4 z-20">
+                      <Link href="/compiler" className="bg-secondary/10 hover:bg-secondary/25 border border-secondary/30 text-secondary font-mono text-xs px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(0,107,92,0.4)] backdrop-blur-sm">
+                        <span className="w-2 h-2 rounded-full bg-secondary animate-pulse shadow-[0_0_8px_rgba(0,107,92,0.8)]"></span>
+                        Try it Live
+                        <span className="material-symbols-outlined text-[14px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                      </Link>
+                    </div>
                   </div>
                 </div>
                 {/* Code Caption */}

@@ -24,13 +24,13 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="w-10 h-10 rounded-full bg-surface-container-low hover:bg-surface-container-high flex items-center justify-center transition-all"
+      className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors duration-200"
       aria-label="Toggle dark/light mode"
     >
       {isDark ? (
-        <span className="text-yellow-400 text-xl select-none">☀️</span>
+        <span className="material-symbols-outlined text-[20px] select-none">light_mode</span>
       ) : (
-        <span className="text-primary text-xl select-none">🌙</span>
+        <span className="material-symbols-outlined text-[20px] select-none">dark_mode</span>
       )}
     </button>
   );

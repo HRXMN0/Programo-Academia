@@ -18,6 +18,7 @@ export default function Page() {
   const [turnstileToken, setTurnstileToken] = useState(null);
   const [captchaError, setCaptchaError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redirect already-logged-in users immediately
   useEffect(() => {
@@ -153,122 +154,156 @@ export default function Page() {
         strategy="afterInteractive"
       />
 
-      <main className="relative z-10 flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-md bg-surface-container-lowest dark:bg-surface rounded-xl border border-outline-variant dark:border-outline shadow-[0px_4px_12px_rgba(11,31,58,0.05)] dark:shadow-[0px_12px_48px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-300 hover:shadow-[0px_8px_24px_rgba(11,31,58,0.08)]">
-          <div className="p-lg">
-            <div className="flex flex-col items-center mb-lg">
-              <BrandLogo variant="auth" className="mb-base" />
-              <h1 className="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed text-center">Create Account</h1>
-              <p className="font-body-md text-body-md text-on-surface-variant dark:text-outline text-center mt-base">Join the next generation of engineers.</p>
+      <main className="relative z-10 flex items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg overflow-hidden flex flex-col font-sans">
+          
+          {/* Top Bar */}
+          <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+            <Link href="/" className="text-gray-600 hover:text-gray-900 flex items-center gap-2 text-sm font-medium">
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              Back
+            </Link>
+            <Link href="/login" className="text-gray-800 hover:text-gray-600 text-sm font-semibold">
+              Log in to account
+            </Link>
+          </div>
+
+          <div className="p-8 md:p-12 flex flex-col items-center">
+            {/* Avatar & Title */}
+            <BrandLogo variant="auth" className="mb-6 scale-125 origin-center" />
+            <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-12 mt-4">Sign up</h1>
+
+            {/* Two Columns Container */}
+            <div className="w-full max-w-3xl flex flex-col md:flex-row gap-12 relative">
+              
+              {/* Left Column: Form */}
+              <div className="flex-1 flex flex-col">
+                <h2 className="text-lg font-semibold text-gray-800 mb-6 text-center">Create account</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1.5" htmlFor="fullName">Full name</label>
+                    <input
+                      id="fullName"
+                      name="fullName"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1.5" htmlFor="email">Email address</label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-sm text-gray-600" htmlFor="password">Password</label>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                        {showPassword ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="pt-3">
+                    <button
+                      type="submit"
+                      disabled={loading || !fullName || !email || !password || !turnstileToken}
+                      className={`w-full font-medium py-3 rounded-full transition-all duration-300 ${
+                        fullName && email && password && turnstileToken
+                          ? 'bg-secondary hover:bg-secondary/90 text-on-secondary shadow-md hover:scale-[1.02] active:scale-[0.98]'
+                          : 'bg-gray-300 text-white opacity-50 cursor-not-allowed'
+                      }`}
+                    >
+                      {loading ? 'Creating...' : 'Sign up'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Vertical Divider / OR */}
+              <div className="hidden md:flex flex-col items-center justify-center relative w-8">
+                <div className="w-px h-full bg-gray-200"></div>
+                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white py-2 text-[11px] font-semibold text-gray-500">OR</span>
+              </div>
+              
+              {/* Mobile OR */}
+              <div className="md:hidden relative py-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">OR</span>
+                </div>
+              </div>
+
+              {/* Right Column: Socials */}
+              <div className="flex-1 flex flex-col justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-full border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                >
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+                  Continue with Google
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {}}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-full border border-gray-400 text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                >
+                  <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="w-5 h-5" />
+                  Continue with Facebook
+                </button>
+                <Link
+                  href="/login"
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-full border border-gray-800 text-gray-900 hover:bg-gray-100 transition-colors font-medium mt-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">login</span>
+                  Log in with email
+                </Link>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-md">
-              {/* Full Name */}
-              <div>
-                <label className="block font-label-md text-label-md text-on-surface dark:text-inverse-on-surface mb-xs" htmlFor="fullName">Full Name</label>
-                <div className="relative rounded-md input-glow transition-shadow duration-200">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none select-none">
-                    <span className="material-symbols-outlined text-outline">person</span>
-                  </div>
-                  <input
-                    className="block w-full pl-10 sm:text-sm border-outline-variant dark:border-outline rounded-md py-3 focus:ring-0 focus:border-secondary transition-colors duration-200 bg-surface-container-lowest dark:bg-surface-dim text-on-surface dark:text-inverse-on-surface placeholder:text-outline/70 dark:placeholder:text-outline"
-                    id="fullName"
-                    name="fullName"
-                    placeholder="Ada Lovelace"
-                    required
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block font-label-md text-label-md text-on-surface dark:text-inverse-on-surface mb-xs" htmlFor="email">Email</label>
-                <div className="relative rounded-md input-glow transition-shadow duration-200">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none select-none">
-                    <span className="material-symbols-outlined text-outline">mail</span>
-                  </div>
-                  <input
-                    className="block w-full pl-10 sm:text-sm border-outline-variant dark:border-outline rounded-md py-3 focus:ring-0 focus:border-secondary transition-colors duration-200 bg-surface-container-lowest dark:bg-surface-dim text-on-surface dark:text-inverse-on-surface placeholder:text-outline/70 dark:placeholder:text-outline"
-                    id="email"
-                    name="email"
-                    placeholder="you@example.com"
-                    required
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block font-label-md text-label-md text-on-surface dark:text-inverse-on-surface mb-xs" htmlFor="password">Password</label>
-                <div className="relative rounded-md input-glow transition-shadow duration-200">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none select-none">
-                    <span className="material-symbols-outlined text-outline">lock</span>
-                  </div>
-                  <input
-                    className="block w-full pl-10 sm:text-sm border-outline-variant dark:border-outline rounded-md py-3 focus:ring-0 focus:border-secondary transition-colors duration-200 bg-surface-container-lowest dark:bg-surface-dim text-on-surface dark:text-inverse-on-surface placeholder:text-outline/70 dark:placeholder:text-outline"
-                    id="password"
-                    name="password"
-                    placeholder="••••••••"
-                    required
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-              </div>
-
+            {/* Bottom Section */}
+            <div className="mt-12 flex flex-col items-center">
+              <a href="#" className="text-xs font-semibold text-gray-700 underline mb-6">Need help?</a>
+              
               {/* Turnstile Captcha Container */}
-              <div className="flex flex-col items-center pt-xs">
+              <div className="flex flex-col items-center mb-4 min-h-[65px]">
                 <div id="turnstile-container"></div>
                 {captchaError && (
-                  <p className="text-error text-center text-sm font-medium mt-xs">{captchaError}</p>
+                  <p className="text-red-500 text-center text-xs mt-2">{captchaError}</p>
                 )}
               </div>
 
-              <div className="pt-base">
-                <button
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-DEFAULT shadow-sm font-label-md text-label-md font-medium text-on-primary bg-primary-container hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-container transition-opacity duration-200 disabled:opacity-50"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading ? 'Creating Account...' : 'Create Account'}
-                </button>
-              </div>
-            </form>
-
-            <div className="mt-lg">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-outline-variant dark:border-outline"></div>
-                </div>
-                <div className="relative flex justify-center font-label-md text-label-md">
-                  <span className="px-2 bg-surface-container-lowest dark:bg-surface text-on-surface-variant dark:text-outline">Or continue with</span>
-                </div>
-              </div>
-
-              <div className="mt-md">
-                <button
-                  onClick={handleGoogleLogin}
-                  className="w-full flex items-center justify-center px-4 py-2.5 border border-outline-variant dark:border-outline rounded-lg shadow-sm bg-surface-container-lowest dark:bg-surface-dim text-sm font-medium text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-surface-low transition-colors duration-200"
-                  type="button"
-                >
-                  <span className="material-symbols-outlined mr-2 text-on-surface select-none" style={{ fontSize: '20px' }}>travel_explore</span>
-                  Continue with Google
-                </button>
-              </div>
+              <p className="text-[10px] text-gray-400 text-center max-w-xs leading-relaxed">
+                Secure Signup with reCAPTCHA subject to<br/>
+                Google <a href="#" className="underline">Terms</a> & <a href="#" className="underline">Privacy</a>
+              </p>
             </div>
-          </div>
-
-          <div className="px-lg py-md bg-surface dark:bg-surface border-t border-outline-variant dark:border-outline text-center">
-            <p className="font-body-md text-body-md text-on-surface-variant dark:text-outline">
-              Already have an account? <Link href="/login" className="font-label-md text-label-md text-secondary hover:text-secondary-fixed-dim transition-colors font-medium">Login</Link>
-            </p>
           </div>
         </div>
       </main>

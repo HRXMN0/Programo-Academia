@@ -33,18 +33,18 @@ export default function Layout({ children }) {
       {/* Floating Toast Notification */}
       {toast && (
         <div className="fixed bottom-gutter right-gutter z-50 animate-fade-in max-w-sm">
-          <div className="bg-white/95 backdrop-blur-md border border-outline-variant shadow-lg rounded-xl p-4 flex items-start gap-3">
+          <div className="bg-surface-container-lowest dark:bg-surface-high backdrop-blur-md border border-outline-variant dark:border-outline shadow-[0px_4px_24px_rgba(0,0,0,0.1)] dark:shadow-[0px_8px_32px_rgba(0,0,0,0.3)] rounded-xl p-4 flex items-start gap-3">
             {toast.type === 'success' && (
-              <span className="material-symbols-outlined text-secondary select-none">check_circle</span>
+              <span className="material-symbols-outlined text-secondary dark:text-secondary-fixed select-none">check_circle</span>
             )}
             {toast.type === 'error' && (
-              <span className="material-symbols-outlined text-error select-none">error</span>
+              <span className="material-symbols-outlined text-error dark:text-error select-none">error</span>
             )}
             {toast.type === 'info' && (
-              <span className="material-symbols-outlined text-on-primary-container select-none">info</span>
+              <span className="material-symbols-outlined text-primary dark:text-primary-fixed select-none">info</span>
             )}
             <div className="flex-1">
-              <p className="text-body-md text-on-background font-medium leading-tight">
+              <p className="text-body-md text-on-surface dark:text-inverse-on-surface font-medium leading-tight">
                 {toast.message}
               </p>
             </div>

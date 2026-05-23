@@ -6,7 +6,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
-  updateProfile
+  updateProfile,
+  sendEmailVerification
 } from 'firebase/auth';
 import {
   doc,
@@ -60,6 +61,7 @@ export function AuthProvider({ children }) {
               uid: firebaseUser.uid,
               name: data.name || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
               email: firebaseUser.email,
+              emailVerified: firebaseUser.emailVerified,
               photoURL: firebaseUser.photoURL,
               createdAt: data.createdAt
             });
@@ -83,6 +85,7 @@ export function AuthProvider({ children }) {
               uid: firebaseUser.uid,
               name: displayName,
               email: firebaseUser.email,
+              emailVerified: firebaseUser.emailVerified,
               photoURL: firebaseUser.photoURL,
               createdAt: new Date()
             });
@@ -118,6 +121,13 @@ export function AuthProvider({ children }) {
   const loginWithEmail = async (email, password) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      if (!userCredential.user.emailVerified) {
+        showToast('Please verify your email before logging in.', 'info');
+        router.replace('/verify-email');
+        return userCredential.user;
+      }
+      
       showToast('Logged in successfully.');
       router.replace('/dashboard');
       return userCredential.user;
@@ -131,6 +141,9 @@ export function AuthProvider({ children }) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: fullName });
+      
+      await sendEmailVerification(userCredential.user);
+      
       // Write full user document — ensures completedTopics: [] and quizScores: {}
       // are always present in Firestore for new accounts created via the signup form.
       const userRef = doc(db, 'users', userCredential.user.uid);
@@ -141,12 +154,28 @@ export function AuthProvider({ children }) {
         quizScores: {},
         createdAt: new Date()
       });
-      showToast('Account created successfully! 🎉');
-      router.replace('/dashboard');
+      showToast('Account created! Please check your email to verify your account. 🎉');
+      router.replace('/verify-email');
       return userCredential.user;
     } catch (error) {
       showToast(error.message, 'error');
       throw error;
+    }
+  };
+
+  const resendVerificationEmail = async () => {
+    if (auth.currentUser && !auth.currentUser.emailVerified) {
+      try {
+        await sendEmailVerification(auth.currentUser);
+        showToast('Verification email resent successfully! Check your inbox.');
+        return true;
+      } catch (error) {
+        showToast(error.message, 'error');
+        return false;
+      }
+    } else {
+      showToast('User is not logged in or email is already verified.', 'error');
+      return false;
     }
   };
 
@@ -232,6 +261,7 @@ export function AuthProvider({ children }) {
       signupWithEmail,
       loginWithGoogle,
       logout,
+      resendVerificationEmail,
       toggleTopicCompletion,
       saveQuizScore,
       showToast,
