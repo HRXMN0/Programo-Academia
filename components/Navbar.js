@@ -258,6 +258,16 @@ export default function Navbar() {
                   </div>
                   <div className="p-2 flex flex-col gap-1">
                     <Link
+                      href="/profile"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-2 py-2 font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <span className="material-symbols-outlined text-[18px]">person</span>
+                      </span>
+                      Profile & Activity
+                    </Link>
+                    <Link
                       href="/dashboard"
                       onClick={() => setProfileDropdownOpen(false)}
                       className="flex items-center gap-3 rounded-lg px-2 py-2 font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors"

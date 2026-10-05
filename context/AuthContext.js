@@ -15,7 +15,8 @@ import {
   setDoc,
   updateDoc,
   arrayUnion,
-  arrayRemove
+  arrayRemove,
+  increment
 } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
 
@@ -454,11 +455,14 @@ export function AuthProvider({ children }) {
         await updateDoc(userRef, { completedTopics: arrayRemove(topicId) });
         showToast('Topic marked as incomplete.');
       } else {
+        const todayKey = now.slice(0, 10);
         setCompletedTopics(prev => [...prev, topicId]);
         setCompletedAt(prev => ({ ...prev, [topicId]: now }));
         await updateDoc(userRef, {
           completedTopics: arrayUnion(topicId),
-          [`completedAt.${topicId}`]: now
+          [`completedAt.${topicId}`]: now,
+          [`contributions.${todayKey}`]: increment(1),
+          lastActiveAt: now
         });
         showToast('Topic marked as completed! 🎉');
       }
@@ -483,13 +487,38 @@ export function AuthProvider({ children }) {
     const currentScore = quizScores[topicId] || 0;
     if (scorePercentage > currentScore) {
       const userRef = doc(db, 'users', user.uid);
+      const now = new Date().toISOString();
+      const todayKey = now.slice(0, 10);
       try {
         setQuizScores(prev => ({ ...prev, [topicId]: scorePercentage }));
-        await updateDoc(userRef, { [`quizScores.${topicId}`]: scorePercentage });
+        await updateDoc(userRef, {
+          [`quizScores.${topicId}`]: scorePercentage,
+          [`quizCompletedAt.${topicId}`]: now,
+          [`contributions.${todayKey}`]: increment(1),
+          lastActiveAt: now
+        });
         showToast(`New high score saved: ${scorePercentage}%! 🎯`);
       } catch {
         showToast('Failed to save quiz score.', 'error');
       }
+    }
+  };
+
+  const recordActivity = async (count = 1, title = 'Learning Activity') => {
+    if (!isLoggedIn || !user?.uid) return false;
+    const now = new Date().toISOString();
+    const todayKey = now.slice(0, 10);
+    const userRef = doc(db, 'users', user.uid);
+    try {
+      await updateDoc(userRef, {
+        [`contributions.${todayKey}`]: increment(count),
+        lastActiveAt: now
+      });
+      showToast(`+${count} activity recorded! 🎉`);
+      return true;
+    } catch (err) {
+      console.error('[auth] failed to record activity', err);
+      return false;
     }
   };
 
@@ -512,6 +541,7 @@ export function AuthProvider({ children }) {
       resendVerificationEmail,
       toggleTopicCompletion,
       saveQuizScore,
+      recordActivity,
       showToast,
       chatbotOpen,
       setChatbotOpen,

@@ -213,6 +213,13 @@ export default function Dashboard() {
             <div className="flex flex-col-reverse items-stretch gap-5 sm:flex-row sm:items-center md:gap-8">
               <div className="flex gap-3">
                 <Link
+                  href="/profile"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-secondary/40 bg-secondary/10 px-4 py-2.5 font-label-md text-label-md text-secondary transition-all duration-200 hover:bg-secondary/20 active-press"
+                >
+                  <span className="material-symbols-outlined text-[18px] leading-none">location_city</span>
+                  Skyline & Profile
+                </Link>
+                <Link
                   href="/dsa"
                   className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-5 py-2.5 font-label-md text-label-md text-on-secondary shadow-brand transition-all duration-200 hover:bg-secondary/90 hover:shadow-brand-hover active-press"
                 >

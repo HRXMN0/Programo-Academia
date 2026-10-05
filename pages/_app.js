@@ -11,7 +11,7 @@ import { useRouter } from 'next/router'
 // /verify-email is deliberately NOT here: ProtectedRoute bounces unverified users
 // to it *and* refuses to render for them, so gating it would strand signups on a
 // permanent spinner. That page guards itself instead.
-const PROTECTED_ROUTES = ['/dashboard']
+const PROTECTED_ROUTES = ['/dashboard', '/profile']
 
 const isProtectedRoute = (pathname) =>
   PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
