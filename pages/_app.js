@@ -1,6 +1,7 @@
 import '../styles/globals.css'
 import Layout from '../components/Layout'
 import { AuthProvider } from '../context/AuthContext'
+import ActivityTracker from '../components/ActivityTracker'
 import ProtectedRoute from '../components/ProtectedRoute'
 import { useRouter } from 'next/router'
 
@@ -15,6 +16,7 @@ export default function App({ Component, pageProps }) {
 
   return (
     <AuthProvider>
+      <ActivityTracker />
       <Layout>
         {isPublicRoute ? (
           <Component {...pageProps} />

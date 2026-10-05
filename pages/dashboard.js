@@ -1,19 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Head from 'next/head'
 import { useAuth } from '../context/AuthContext'
 import { topics } from '../data/topics'
-import { doc, onSnapshot } from 'firebase/firestore'
+import { collection, doc, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
+import dynamic from 'next/dynamic'
+
+const ContributionSkyline = dynamic(() => import('../components/ContributionSkyline'), {
+  ssr: false,
+})
 
 export default function Dashboard() {
   const router = useRouter()
-  const { user, completedTopics: authCompletedTopics = [], quizScores: authQuizScores = {} } = useAuth()
+  const { user, showToast, completedTopics: authCompletedTopics = [], quizScores: authQuizScores = {} } = useAuth()
 
   // Local state — seeded from AuthContext, kept fresh by onSnapshot
   const [completedTopics, setCompletedTopics] = useState(authCompletedTopics || [])
   const [quizScores, setQuizScores] = useState(authQuizScores || {})
+  const [activity, setActivity] = useState([])
+  const showToastRef = useRef(showToast)
+  showToastRef.current = showToast
 
   // Real-time listener scoped only to dashboard page
   useEffect(() => {
@@ -29,6 +37,37 @@ export default function Dashboard() {
     })
 
     return () => unsubscribe()
+  }, [user?.uid])
+
+  useEffect(() => {
+    if (!user?.uid) {
+      setActivity([])
+      return
+    }
+
+    const end = new Date()
+    const endKey = end.toISOString().slice(0, 10)
+    const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() - 364))
+    const startKey = start.toISOString().slice(0, 10)
+    const activityQuery = query(
+      collection(db, 'users', user.uid, 'activity'),
+      where('date', '>=', startKey),
+      where('date', '<=', endKey)
+    )
+
+    return onSnapshot(
+      activityQuery,
+      (snapshot) => {
+        setActivity(snapshot.docs.map((activityDoc) => ({
+          date: activityDoc.id,
+          count: Number(activityDoc.data().count) || 0,
+        })))
+      },
+      () => {
+        setActivity([])
+        showToastRef.current('Unable to load your learning activity.', 'error')
+      }
+    )
   }, [user?.uid])
 
 
@@ -105,6 +144,37 @@ export default function Dashboard() {
             <Link href="/interview-prep" className="border border-outline-variant text-on-surface-variant hover:border-primary/50 hover:bg-surface-container-low hover:text-primary font-label-md text-label-md px-md py-sm rounded-lg transition-all font-semibold">
               Interview Coach
             </Link>
+          </div>
+        </section>
+
+        {/* Learning Activity */}
+        <section className="space-y-sm">
+          <div>
+            <h2 className="font-headline-md text-headline-md text-primary text-base flex items-center gap-xs">
+              <span className="material-symbols-outlined text-secondary">calendar_month</span>
+              Learning Activity
+            </h2>
+            <p className="text-sm text-on-surface-variant mt-1">
+              See how often you visit learning pages throughout the year.
+            </p>
+          </div>
+          <div
+            style={{
+              '--color-background': 'var(--card)',
+              '--color-foreground': 'var(--text)',
+              '--color-border': 'var(--border)',
+              '--color-muted-foreground': 'var(--on-surface-variant)',
+            }}
+          >
+            <ContributionSkyline
+              data={activity}
+              title="Your learning visits in the last year"
+              unit="visit"
+              unitPlural="visits"
+              defaultView="2d"
+              className="shadow-sm"
+              footer="Each signed-in visit to a page is counted once."
+            />
           </div>
         </section>
 
