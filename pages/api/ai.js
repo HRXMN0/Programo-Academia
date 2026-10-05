@@ -1,108 +1,188 @@
+import Anthropic from '@anthropic-ai/sdk'
+import { z } from 'zod'
+import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
+
+// One constant so the tutor and the interview coach never drift apart. Opus 5 is
+// the strongest explainer; 'claude-sonnet-5' and 'claude-haiku-4-5' are drop-in
+// swaps if the bill ever matters more than the depth of the answers.
+const MODEL = 'claude-opus-5'
+
+// Opus 5 thinks before it answers, which regularly takes longer than Vercel's
+// 10s default for serverless functions. 60s is the ceiling on the Hobby plan.
+export const config = {
+  maxDuration: 60
+}
+
+// The interview page renders feedback as three bullet lists, so we make the API
+// guarantee that shape instead of parsing whatever JSON the model felt like
+// emitting. Anything off-schema is retried server-side before we ever see it.
+const FeedbackSchema = z.object({
+  strengths: z.array(z.string()),
+  weaknesses: z.array(z.string()),
+  suggestions: z.array(z.string())
+})
+
+const TUTOR_SYSTEM = `You are a C++ and Data Structures & Algorithms tutor on Programo Academia, a free study site. Your students are mostly beginners working through their first DSA course.
+
+Teach, don't just answer:
+- Lead with the intuition, then the mechanics, then the code.
+- Put any code in a fenced \`\`\`cpp block, and use modern C++ (C++17 or later).
+- State time and space complexity whenever you describe an algorithm or data structure.
+- Prefer one short worked example over a long abstract explanation.
+- If the question is vague, answer the most likely reading and say what you assumed.
+
+Keep it tight — a few hundred words unless the student asks you to go deeper.`
+
+const INTERVIEWER_SYSTEM = `You are a technical interviewer reviewing a student's written answer to a C++ / DSA interview question.
+
+Grade only what the answer actually says — never credit the student for a concept they did not mention.
+Be specific: name the missing idea rather than noting that something is missing.
+Write each bullet as one sentence the student can act on.
+If the answer is weak, say so plainly. An empty strengths list beats an invented one.
+End the suggestions list with one short model answer they can compare against.`
+
+// Built lazily: the constructor needs a key, and the no-key path below never
+// reaches the API at all.
+let anthropic = null
+function getClient() {
+  if (!anthropic) {
+    anthropic = new Anthropic({
+      // Worst case is timeout × (maxRetries + 1) ≈ 50s, which stays inside the
+      // 60s function limit above so we fail into the mock instead of being killed.
+      timeout: 25_000,
+      maxRetries: 1
+    })
+  }
+  return anthropic
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { action, question, context, answer, history = [] } = req.body
-  const apiKey = process.env.OPENAI_API_KEY
+  const { action, question, context, answer, history = [] } = req.body || {}
 
-  if (!apiKey) {
-    // Falls back to intelligent Mock system
-    if (action === 'chat') {
-      const responseText = getMockChatResponse(question, context, history)
-      return res.status(200).json({ response: responseText })
-    } else if (action === 'analyze') {
-      const feedback = getMockFeedback(answer, question)
-      return res.status(200).json({ feedback })
-    }
+  if (action !== 'chat' && action !== 'analyze') {
     return res.status(400).json({ error: 'Invalid action' })
+  }
+
+  // No key configured — the site still teaches. The mock engines below cover the
+  // topics we actually ship lessons for, so a missing key costs quality, not uptime.
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(200).json(mockResponse(action, { question, context, answer, history }))
   }
 
   try {
     if (action === 'chat') {
-      // 1. Structured prompt for Tutor Mode
-      const systemPrompt = `You are a helpful senior C++ and DSA tutor on Programo Academia. 
-TUTOR MODE: Explain concepts clearly, concisely, and structurally. Always use modern C++ snippets if helpful. 
-Context: ${context || 'General inquiry about programming or DSA.'}
-Encourage the user to learn step-by-step.`
-
-      // 2. Add short chat memory: maintain last 4 messages from history + current question
-      const slicedHistory = history.slice(-4).map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'assistant',
-        content: msg.content
-      }))
-
-      const messages = [
-        { role: 'system', content: systemPrompt },
-        ...slicedHistory,
-        { role: 'user', content: question }
-      ]
-
-      const responseText = await callOpenAI(messages, apiKey)
-      return res.status(200).json({ response: responseText })
-    } else if (action === 'analyze') {
-      // 3. Structured prompt for Interview Mode
-      const systemPrompt = `You are an expert technical interviewer assessing candidates on C++ and DSA concepts.
-INTERVIEW MODE: Evaluate the user's answer to the given technical question. Give constructive, professional, and direct feedback.
-Format your output strictly as a JSON object with these keys:
-{
-  "strengths": ["list of strengths as strings"],
-  "weaknesses": ["list of weaknesses/omissions as strings"],
-  "suggestions": ["list of concrete recommendations to improve the answer or a sample ideal explanation"]
-}`
-
-      const promptText = `Question: "${question}"\nCandidate's Answer: "${answer}"`
-
-      const messages = [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: promptText }
-      ]
-
-      const responseText = await callOpenAI(messages, apiKey, true)
-      
-      try {
-        const feedbackJson = JSON.parse(responseText)
-        return res.status(200).json({ feedback: feedbackJson })
-      } catch (err) {
-        // Fallback parse if JSON formatting failed
-        return res.status(200).json({
-          feedback: {
-            strengths: ["Provided a technical explanation."],
-            weaknesses: ["AI response could not be parsed as structured JSON."],
-            suggestions: [responseText]
-          }
-        })
-      }
+      return res.status(200).json({ response: await runTutor({ question, context, history }) })
     }
+    return res.status(200).json({ feedback: await runInterviewer({ question, answer }) })
   } catch (error) {
-    console.error("OpenAI Server Error:", error)
-    return res.status(500).json({ error: "AI currently unavailable. Please try again later." })
+    // Same reasoning as the missing-key branch: a student mid-lesson gets a useful
+    // answer instead of an error card. `degraded` lets the UI say so if it wants to,
+    // and the log line is how you find out the key is wrong.
+    console.error('[api/ai] falling back to offline tutor —', describeError(error))
+    return res.status(200).json({
+      ...mockResponse(action, { question, context, answer, history }),
+      degraded: true
+    })
   }
 }
 
-// Helper to query OpenAI API
-async function callOpenAI(messages, apiKey, jsonMode = false) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages,
-      response_format: jsonMode ? { type: "json_object" } : undefined,
-      temperature: 0.7
-    })
+async function runTutor({ question, context, history }) {
+  const message = await getClient().messages.create({
+    model: MODEL,
+    // Generous because thinking tokens count against this cap too — the length
+    // limit that actually matters is the one in the system prompt.
+    max_tokens: 8000,
+    // Tutoring is latency-sensitive and the questions are rarely hard for Opus.
+    output_config: { effort: 'medium' },
+    system: `${TUTOR_SYSTEM}
+
+Lesson the student is currently on: ${context || 'none — this is a general programming question.'}`,
+    messages: [...recentTurns(history), { role: 'user', content: question }]
   })
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}))
-    throw new Error(err.error?.message || `HTTP status ${response.status}`)
+  if (message.stop_reason === 'refusal') {
+    throw new Error(`declined (${message.stop_details?.category || 'unspecified'})`)
   }
 
-  const data = await response.json()
-  return data.choices[0].message.content
+  const text = message.content
+    .filter(block => block.type === 'text')
+    .map(block => block.text)
+    .join('\n')
+    .trim()
+
+  // An empty body means the turn was spent entirely on thinking, or truncated.
+  // Either way there is nothing to show, so let the caller fall back.
+  if (!text) throw new Error(`empty response (stop_reason: ${message.stop_reason})`)
+
+  return text
+}
+
+async function runInterviewer({ question, answer }) {
+  const message = await getClient().messages.parse({
+    model: MODEL,
+    max_tokens: 4000,
+    output_config: {
+      effort: 'medium',
+      format: zodOutputFormat(FeedbackSchema)
+    },
+    system: INTERVIEWER_SYSTEM,
+    messages: [
+      {
+        role: 'user',
+        content: `Interview question: ${question}\n\nStudent's answer: ${answer}`
+      }
+    ]
+  })
+
+  // parsed_output is null when the model refused or the response was truncated
+  // before the schema could be satisfied.
+  if (!message.parsed_output) {
+    throw new Error(`no structured feedback (stop_reason: ${message.stop_reason})`)
+  }
+
+  return message.parsed_output
+}
+
+// Short memory, so "explain that again" works without resending the whole chat.
+function recentTurns(history) {
+  const turns = (Array.isArray(history) ? history : [])
+    .filter(msg => msg && typeof msg.content === 'string' && msg.content.trim())
+    .slice(-4)
+    .map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }))
+
+  // The Messages API requires the conversation to open on a user turn, and a
+  // window sliced out of the middle of a chat lands on an assistant reply half
+  // the time.
+  while (turns.length > 0 && turns[0].role === 'assistant') turns.shift()
+
+  return turns
+}
+
+function mockResponse(action, { question, context, answer, history }) {
+  if (action === 'chat') {
+    return { response: getMockChatResponse(question, context, history) }
+  }
+  return { feedback: getMockFeedback(answer, question) }
+}
+
+function describeError(error) {
+  if (error instanceof Anthropic.AuthenticationError) {
+    return 'ANTHROPIC_API_KEY is missing or invalid'
+  }
+  if (error instanceof Anthropic.RateLimitError) {
+    return 'rate limited by the Anthropic API'
+  }
+  if (error instanceof Anthropic.APIError) {
+    return `Anthropic API error ${error.status}: ${error.message}`
+  }
+  return error?.message || 'unknown error'
 }
 
 // Context-aware Mock Chat Engine
@@ -122,7 +202,7 @@ function getMockChatResponse(question, context, history) {
   // Topic specific questions
   if (q.includes("binary search") || ctx.includes("binary search")) {
     return `**Binary Search** is an O(log N) search algorithm. It repeatedly divides a sorted search interval in half.
-    
+
 **Key Steps:**
 1. Check middle element.
 2. If middle equals target, return index.
@@ -145,7 +225,7 @@ int binarySearch(int arr[], int l, int r, int x) {
 
   if (q.includes("array") || ctx.includes("array")) {
     return `**Arrays** are contiguous sequences of elements. They allocate a fixed block of RAM.
-    
+
 **Why use them?**
 - **O(1) Access**: Calculating target RAM address takes constant time: \`Address = Start + Index * Size\`.
 - **Cache Friendly**: CPU caches contiguous blocks, meaning sequential reads are incredibly fast.
@@ -164,7 +244,7 @@ int binarySearch(int arr[], int l, int r, int x) {
 
   if (q.includes("recursion") || q.includes("call stack")) {
     return `**Recursion** is a technique where a function calls itself to solve smaller subproblems.
-    
+
 **Rule of Thumb:**
 - **Base Case**: The stopping criteria that returns a value without recursing.
 - **Recursive Case**: Shifting variables toward the base case.
@@ -184,7 +264,7 @@ int binarySearch(int arr[], int l, int r, int x) {
   // Fallback context awareness
   if (context) {
     return `That's a good question regarding **${context}**. Let's review the core definition:
-    
+
 1. It handles state or allocations dynamically.
 2. It has unique trade-offs in terms of Big-O time and space complexity.
 3. In C++, we manage this using pointers or std containers.
@@ -192,7 +272,7 @@ int binarySearch(int arr[], int l, int r, int x) {
 Could you elaborate on which specific operation (e.g. searching, insertion, deletion) or code snippet you want me to explain?`
   }
 
-  return `I'm here to help you master C++ and Data Structures! 
+  return `I'm here to help you master C++ and Data Structures!
 You can ask me questions like:
 - *"Explain binary search"*
 - *"What is cache locality in arrays?"*

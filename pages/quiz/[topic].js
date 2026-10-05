@@ -5,6 +5,33 @@ import { quizzes } from '../../data/quizzes'
 import { topics } from '../../data/topics'
 import { useAuth } from '../../context/AuthContext'
 
+/* Per-topic accent palette — mirrors /dsa and /dsa/[slug] so a quiz is visibly
+   the same colour as the lesson it came from. Class strings are spelled out in
+   full because Tailwind cannot resolve `bg-topic-${key}`. */
+const TOPIC_ACCENTS = {
+  "arrays":              { fill: 'bg-topic-blue',    tint: 'bg-topic-blue/10',    border: 'border-topic-blue/45' },
+  "linked-lists":        { fill: 'bg-topic-violet',  tint: 'bg-topic-violet/10',  border: 'border-topic-violet/45' },
+  "stacks-queues":       { fill: 'bg-topic-amber',   tint: 'bg-topic-amber/10',   border: 'border-topic-amber/45' },
+  "trees":               { fill: 'bg-topic-emerald', tint: 'bg-topic-emerald/10', border: 'border-topic-emerald/45' },
+  "graphs":              { fill: 'bg-topic-rose',    tint: 'bg-topic-rose/10',    border: 'border-topic-rose/45' },
+  "dynamic-programming": { fill: 'bg-topic-cyan',    tint: 'bg-topic-cyan/10',    border: 'border-topic-cyan/45' }
+}
+const FALLBACK_ACCENT = { fill: 'bg-secondary', tint: 'bg-secondary/10', border: 'border-secondary/45' }
+const accentFor = (id) => TOPIC_ACCENTS[id] || FALLBACK_ACCENT
+
+/* The only ink legible on a solid accent fill — white drops to 2.1:1 on amber.
+   Paired with icons and large numerals only, never with small text. */
+const ACCENT_INK = 'text-on-primary-fixed'
+
+const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
+
+// Progress-ring geometry for the result screen.
+const RING_RADIUS = 42
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
+
+// Big-O style answers read better in the mono face; prose answers do not.
+const isCodeLike = (value) => /^O\s*\(/i.test(String(value).trim())
+
 export default function QuizPage() {
   const router = useRouter()
   const { topic: topicId } = router.query
@@ -16,32 +43,95 @@ export default function QuizPage() {
   const [score, setScore] = useState(0)
   const [showResults, setShowResults] = useState(false)
 
-  if (!router.isReady) return null
+  if (!router.isReady) {
+    return (
+      <main className="flex-grow flex items-center justify-center px-gutter py-lg">
+        <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading quiz"></div>
+      </main>
+    )
+  }
 
   const topicQuestions = quizzes[topicId]
   const topicData = topics.find(t => t.id === topicId)
+  const accent = accentFor(topicId)
+  const topicLabel = topicData ? topicData.title.split(':')[0] : 'DSA Topic'
 
   // Handle fallback if no quiz is found
   if (!topicQuestions || topicQuestions.length === 0) {
+    // Only three of the six topics have questions written so far — say so, and
+    // point at the ones that are actually ready instead of dead-ending.
+    const readyQuizzes = topics.filter(
+      t => t.track === 'dsa' && Array.isArray(quizzes[t.id]) && quizzes[t.id].length > 0
+    )
+
     return (
-      <main className="flex-grow w-full max-w-container-max mx-auto px-gutter py-xl flex flex-col items-center justify-center min-h-[70vh]">
-        <div className="max-w-md text-center flex flex-col items-center gap-md">
-          <div className="w-16 h-16 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl">quiz</span>
-          </div>
-          <h1 className="font-display-lg text-display-lg text-primary">No Quiz Available</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            There is no quiz configured for this topic yet. Go back to study the content or explore other sections.
-          </p>
-          <div className="flex gap-sm">
-            {topicData && (
-              <Link href={`/dsa/${topicData.slug}`} className="bg-secondary text-on-secondary font-label-md text-label-md px-lg py-sm rounded hover:bg-on-secondary-container transition-colors shadow-sm">
-                Back to Topic
-              </Link>
+      <main className="flex-grow w-full px-gutter py-8 md:py-12">
+        <div className="w-full max-w-2xl mx-auto rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card overflow-hidden animate-fade-in">
+          <span aria-hidden="true" className={`block h-1.5 ${accent.fill}`} />
+
+          <div className="p-6 sm:p-8">
+            <div className="flex items-start gap-4">
+              <span className={`shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center border ${accent.tint} ${accent.border}`}>
+                <span className="material-symbols-outlined text-[28px] text-on-surface">hourglass_top</span>
+              </span>
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">
+                  {topicLabel}
+                </span>
+                <h1 className="text-headline-lg-mobile md:text-headline-lg text-primary mt-1">
+                  This quiz is still being written
+                </h1>
+              </div>
+            </div>
+
+            <p className="mt-5 text-body-lg text-on-surface-variant max-w-prose">
+              There is no quiz configured for this topic yet. Go back to study the content or explore other sections — the questions land here as soon as they are ready.
+            </p>
+
+            {readyQuizzes.length > 0 && (
+              <div className="mt-6 rounded-xl border border-outline-variant bg-surface-container-low p-4">
+                <h2 className="text-label-md text-on-surface-variant uppercase tracking-[0.12em] text-[11px] font-bold mb-3">
+                  Quizzes ready to take now
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {readyQuizzes.map(t => {
+                    const tAccent = accentFor(t.id)
+                    return (
+                      <Link
+                        key={t.id}
+                        href={`/quiz/${t.id}`}
+                        className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-label-md text-on-surface hover:border-secondary hover:shadow-card transition-all"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${tAccent.fill}`} aria-hidden="true" />
+                        {t.title.split(':')[0]}
+                        <span className="text-on-surface-variant font-normal">
+                          {quizzes[t.id].length} Q
+                        </span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
             )}
-            <Link href="/dsa" className="border border-primary text-primary font-label-md text-label-md px-lg py-sm rounded hover:bg-surface-container-low transition-colors">
-              Syllabus Overview
-            </Link>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              {topicData && (
+                <Link
+                  href={`/dsa/${topicData.slug}`}
+                  className="inline-flex items-center gap-2 rounded-lg bg-secondary text-on-secondary text-label-md px-5 py-3 shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 transition-all active-press"
+                >
+                  <span className="material-symbols-outlined text-[18px]">menu_book</span>
+                  Back to topic
+                </Link>
+              )}
+              <Link
+                href="/dsa"
+                className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest text-label-md text-on-surface px-5 py-3 hover:bg-surface-container-high transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">route</span>
+                Syllabus overview
+              </Link>
+            </div>
           </div>
         </div>
       </main>
@@ -92,65 +182,112 @@ export default function QuizPage() {
     let resultTitle = "Review Needed"
     let resultMessage = "Keep studying the lesson materials and try again to master these core concepts."
     let resultIcon = "sentiment_dissatisfied"
-    let badgeColor = "bg-error-container text-error"
+    let badgeColor = "border-error/40 bg-error/10"
+    let badgeDot = "bg-error"
+    let ringStroke = "stroke-error"
+    let iconChip = "bg-error text-on-error"
 
     if (scorePercentage === 100) {
       resultTitle = "Perfect Score! 🏆"
       resultMessage = "Incredible work! You have fully mastered these structural patterns and are ready for the next challenge."
       resultIcon = "emoji_events"
-      badgeColor = "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-400"
+      badgeColor = "border-topic-amber/45 bg-topic-amber/10"
+      badgeDot = "bg-topic-amber"
+      ringStroke = "stroke-topic-amber"
+      iconChip = `bg-topic-amber ${ACCENT_INK}`
     } else if (passed) {
       resultTitle = "Passed! 🎉"
       resultMessage = "Great job! You have demonstrated a solid understanding of this topic's concepts."
       resultIcon = "check_circle"
-      badgeColor = "bg-secondary-container text-on-secondary-container border border-secondary/20"
+      badgeColor = "border-secondary/40 bg-secondary/10"
+      badgeDot = "bg-secondary"
+      ringStroke = "stroke-secondary"
+      iconChip = "bg-secondary text-on-secondary"
     }
 
     return (
-      <main className="flex-grow flex items-center justify-center p-gutter bg-background min-h-[80vh]">
-        <div className="w-full max-w-2xl bg-surface-container-lowest rounded-xl border border-outline-variant p-lg flex flex-col gap-lg items-center text-center shadow-sm animate-fade-in">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center ${passed ? 'bg-secondary/10 text-secondary' : 'bg-error-container text-error'}`}>
-            <span className="material-symbols-outlined text-5xl">
-              {resultIcon}
-            </span>
-          </div>
+      <main className="flex-grow w-full px-gutter py-8 md:py-12">
+        <div className="w-full max-w-2xl mx-auto rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-lifted overflow-hidden animate-fade-in">
+          <span aria-hidden="true" className={`block h-1.5 ${accent.fill}`} />
 
-          <div className="flex flex-col gap-xs">
-            <span className={`px-sm py-xs rounded text-xs font-semibold uppercase tracking-wider ${badgeColor}`}>
-              {scorePercentage}% Score
+          <div className="p-6 sm:p-8 flex flex-col items-center text-center">
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">
+              {topicLabel} &middot; Practice quiz
             </span>
-            <h1 className="font-display-lg text-display-lg text-primary mt-sm">{resultTitle}</h1>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              You scored <span className="font-bold text-primary">{score}</span> out of <span className="font-bold text-primary">{totalQuestions}</span> questions.
+
+            {/* Score ring */}
+            <div className="relative w-32 h-32 mt-5">
+              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90" aria-hidden="true">
+                <circle cx="50" cy="50" r={RING_RADIUS} fill="none" strokeWidth="9" className="stroke-surface-container-high" />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={RING_RADIUS}
+                  fill="none"
+                  strokeWidth="9"
+                  strokeLinecap="round"
+                  className={`${ringStroke} transition-all duration-700 ease-out-expo`}
+                  strokeDasharray={RING_CIRCUMFERENCE}
+                  strokeDashoffset={RING_CIRCUMFERENCE * (1 - scorePercentage / 100)}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-headline-lg text-primary leading-none">{scorePercentage}%</span>
+                <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">score</span>
+              </div>
+              <span className={`absolute bottom-0 right-0 w-11 h-11 rounded-full flex items-center justify-center shadow-card ${iconChip}`}>
+                <span className="material-symbols-outlined filled text-[24px]">{resultIcon}</span>
+              </span>
+            </div>
+
+            <h1 className="text-headline-lg-mobile md:text-headline-lg text-primary mt-6">{resultTitle}</h1>
+
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold text-on-surface ${badgeColor}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${badgeDot}`} aria-hidden="true" />
+                {passed ? 'Passed' : 'Below 70% pass mark'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-1.5 text-[12px] font-semibold text-on-surface">
+                <span className="material-symbols-outlined text-[14px] text-secondary filled">check_circle</span>
+                {score} correct
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-1.5 text-[12px] font-semibold text-on-surface">
+                <span className="material-symbols-outlined text-[14px]">help</span>
+                {totalQuestions} questions
+              </span>
+            </div>
+
+            <p className="mt-5 text-body-lg text-on-surface-variant max-w-prose">
+              {resultMessage}
             </p>
-          </div>
 
-          {/* Results Score Bar */}
-          <div className="w-full bg-surface-container-high rounded h-2 overflow-hidden max-w-xs mt-xs">
-            <div className={`h-full ${passed ? 'bg-secondary' : 'bg-error'}`} style={{ width: `${scorePercentage}%` }}></div>
-          </div>
-
-          <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
-            {resultMessage}
-          </p>
-
-          <div className="flex gap-sm w-full md:w-auto justify-center mt-md">
-            <button 
-              onClick={handleRetake} 
-              className="border border-outline-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md px-lg py-sm rounded text-primary flex items-center justify-center gap-xs hover-lift active-press"
-            >
-              <span className="material-symbols-outlined text-[18px]">replay</span>
-              Retake Quiz
-            </button>
-            {topicData && (
-              <Link 
-                href={`/dsa/${topicData.slug}`} 
-                className="bg-secondary text-on-secondary hover:bg-on-secondary-container transition-colors font-label-md text-label-md px-lg py-sm rounded font-medium shadow-sm flex items-center justify-center gap-xs hover-lift active-press"
+            <div className="mt-7 pt-6 border-t border-outline-variant w-full flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={handleRetake}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest text-label-md text-on-surface px-5 py-3 hover:bg-surface-container-high transition-colors hover-lift active-press"
               >
-                Back to Lesson
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                <span className="material-symbols-outlined text-[18px]">replay</span>
+                Retake quiz
+              </button>
+
+              {topicData && (
+                <Link
+                  href={`/dsa/${topicData.slug}`}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-secondary text-on-secondary text-label-md px-5 py-3 shadow-brand hover:shadow-brand-hover transition-all hover-lift active-press"
+                >
+                  Back to lesson
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </Link>
+              )}
+
+              <Link
+                href="/dsa"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-label-md text-on-surface-variant px-5 py-3 hover:text-primary hover:bg-surface-container-low transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">route</span>
+                Syllabus
               </Link>
-            )}
+            </div>
           </div>
         </div>
       </main>
@@ -158,135 +295,226 @@ export default function QuizPage() {
   }
 
   return (
-    <main className="flex-grow flex items-center justify-center p-gutter bg-background min-h-[80vh]">
-      {/* Key is set to currentIdx so that changing questions triggers a fresh animate-fade-in */}
-      <div 
-        key={currentIdx} 
-        className="w-full max-w-2xl bg-surface-container-lowest rounded-xl border border-outline-variant p-lg flex flex-col gap-lg shadow-sm animate-fade-in"
-      >
-        {/* Animated Progress Bar */}
-        <div className="w-full bg-surface-container-high h-1.5 overflow-hidden rounded-full mb-xs">
-          <div 
-            className="bg-secondary h-full transition-all duration-500 ease-out" 
-            style={{ width: `${progressPercent}%` }}
-          ></div>
-        </div>
-
-        {/* Quiz Header / Progress */}
-        <div className="flex items-center justify-between border-b border-outline-variant pb-base">
-          <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-xs">
-            Question {currentIdx + 1} of {totalQuestions}
-          </span>
-          <span className="inline-block bg-surface-container px-sm py-xs rounded text-xs font-label-md text-on-surface-variant capitalize">
-            {topicData ? topicData.title.split(':')[0] : 'DSA Topic'}
-          </span>
-        </div>
-
-        {/* Question */}
-        <div className="flex flex-col gap-md">
-          <h1 className="font-headline-lg text-headline-lg text-primary md:text-2xl text-xl font-semibold leading-snug">
-            {currentQuestion.question}
-          </h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">Select the correct option below.</p>
-        </div>
-
-        {/* Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-          {Object.entries(currentQuestion.options).map(([key, value]) => {
-            const isSelected = selectedOption === key
-            const isCorrectAnswer = currentQuestion.answer === key
-            
-            // Set option card styling based on submission state
-            let cardStyle = "border-outline-variant hover:shadow-[0px_4px_12px_rgba(11,31,58,0.05)] hover:border-secondary/40 bg-surface-container-lowest"
-            let iconStyle = "border-outline-variant"
-            let iconContent = null
-
-            if (isSubmitted) {
-              if (isCorrectAnswer) {
-                cardStyle = "border-secondary bg-secondary/5 ring-1 ring-secondary/20"
-                iconStyle = "bg-secondary border-secondary text-on-secondary"
-                iconContent = "check"
-              } else if (isSelected) {
-                cardStyle = "border-error bg-error-container/10 ring-1 ring-error/20"
-                iconStyle = "bg-error border-error text-on-error"
-                iconContent = "close"
-              } else {
-                cardStyle = "border-outline-variant opacity-60 pointer-events-none"
-              }
-            } else if (isSelected) {
-              cardStyle = "border-secondary ring-2 ring-secondary/20 bg-secondary/5"
-              iconStyle = "border-secondary bg-secondary text-on-secondary"
-              iconContent = "check"
-            }
-
-            return (
-              <label 
-                key={key} 
-                className={`option-card cursor-pointer relative group block transition-all active-press ${isSubmitted ? 'pointer-events-none' : ''}`}
-              >
-                <input 
-                  type="radio" 
-                  name="quiz-option" 
-                  value={key}
-                  checked={isSelected}
-                  onChange={() => setSelectedOption(key)}
-                  className="peer sr-only"
-                  disabled={isSubmitted}
-                />
-                <div className={`h-full border rounded p-md flex items-center gap-md transition-all duration-200 ${cardStyle}`}>
-                  <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-colors ${iconStyle}`}>
-                    {iconContent && <span className="material-symbols-outlined text-[14px]">{iconContent}</span>}
-                  </div>
-                  <span className="font-code-block text-code-block text-on-background text-sm">{value}</span>
-                </div>
-              </label>
-            )
-          })}
-        </div>
-
-        {/* Actions & Feedback */}
-        <div className="flex flex-col gap-md pt-base border-t border-outline-variant">
-          {!isSubmitted ? (
-            <button 
-              onClick={handleSubmit}
-              disabled={!selectedOption}
-              className={`font-label-md text-label-md px-xl py-sm rounded w-full md:w-auto self-end transition-all shadow-sm font-medium hover-lift active-press ${
-                selectedOption 
-                  ? 'bg-secondary text-on-secondary hover:bg-on-secondary-container hover:shadow-md cursor-pointer' 
-                  : 'bg-surface-container-high text-on-surface-variant opacity-50 cursor-not-allowed'
-              }`}
-            >
-              Submit Answer
-            </button>
-          ) : (
-            <button 
-              onClick={handleNext}
-              className="bg-secondary text-on-secondary hover:bg-on-secondary-container font-label-md text-label-md px-xl py-sm rounded w-full md:w-auto self-end transition-colors font-medium shadow-sm hover-lift active-press"
-            >
-              {currentIdx + 1 < totalQuestions ? 'Next Question' : 'Finish Quiz'}
-            </button>
-          )}
-
-          {/* Correct/Incorrect Explanation Card */}
-          {isSubmitted && (
-            <div className={`rounded p-md border mt-sm animate-fade-in flex gap-sm items-start ${
-              selectedOption === currentQuestion.answer 
-                ? 'border-secondary/30 bg-secondary/5 text-on-secondary-fixed-variant' 
-                : 'border-error/30 bg-error-container/5 text-on-error-container'
-            }`}>
-              <span className={`material-symbols-outlined ${selectedOption === currentQuestion.answer ? 'text-secondary' : 'text-error'}`}>
-                {selectedOption === currentQuestion.answer ? 'check_circle' : 'cancel'}
+    <main className="flex-grow w-full px-gutter py-8 md:py-12">
+      <div className="w-full max-w-3xl mx-auto">
+        {/* ── Quiz header: which topic am I being tested on ───────────────── */}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${accent.fill} ${ACCENT_INK}`}>
+              <span className="material-symbols-outlined filled">
+                {topicData && topicData.iconName ? topicData.iconName : 'quiz'}
               </span>
-              <div>
-                <h4 className="font-bold font-label-md text-label-md mb-xs">
-                  {selectedOption === currentQuestion.answer ? 'Correct!' : 'Incorrect Answer'}
-                </h4>
-                <p className="font-body-md text-body-md leading-relaxed">
-                  {currentQuestion.explanation}
-                </p>
-              </div>
+            </span>
+            <div className="min-w-0">
+              <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">
+                Practice quiz
+              </span>
+              <h1 className="text-headline-sm md:text-headline-md text-primary truncate">{topicLabel}</h1>
             </div>
+          </div>
+
+          {topicData && (
+            <Link
+              href={`/dsa/${topicData.slug}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-label-md text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">menu_book</span>
+              <span className="hidden sm:inline">Back to lesson</span>
+            </Link>
           )}
+        </div>
+
+        {/* Key is set to currentIdx so that changing questions triggers a fresh animate-fade-in */}
+        <div
+          key={currentIdx}
+          className="rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-card overflow-hidden animate-fade-in"
+        >
+          {/* Continuous progress across the whole question set */}
+          <div className="h-1.5 w-full bg-surface-container-high" aria-hidden="true">
+            <div
+              className={`h-full ${accent.fill} transition-all duration-500 ease-out-expo`}
+              style={{ width: `${progressPercent}%` }}
+            ></div>
+          </div>
+
+          <div className="p-5 sm:p-7">
+            {/* Question counter + per-question step dots */}
+            <div className="flex items-center justify-between gap-3 flex-wrap pb-4 border-b border-outline-variant">
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-on-surface-variant whitespace-nowrap">
+                  Question {currentIdx + 1} of {totalQuestions}
+                </span>
+                <div className="flex items-center gap-1.5" aria-hidden="true">
+                  {topicQuestions.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all ${
+                        i < currentIdx
+                          ? 'w-4 bg-secondary'
+                          : i === currentIdx
+                            ? `w-8 ${accent.fill}`
+                            : 'w-4 bg-surface-container-high'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-low px-2.5 py-1 text-[12px] font-semibold text-on-surface tabular-nums">
+                <span className="material-symbols-outlined text-[14px] text-secondary filled">check_circle</span>
+                {score} correct
+              </span>
+            </div>
+
+            {/* Question */}
+            <div className="mt-6">
+              <h2 className="text-headline-md md:text-headline-lg text-primary">
+                {currentQuestion.question}
+              </h2>
+              <p className="mt-2 text-body-md text-on-surface-variant">
+                Select the correct option below.
+              </p>
+            </div>
+
+            {/* Options */}
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+              {Object.entries(currentQuestion.options).map(([key, value], optIdx) => {
+                const isSelected = selectedOption === key
+                const isCorrectAnswer = currentQuestion.answer === key
+
+                /* Four visually distinct states. "Selected but not graded yet"
+                   uses indigo so it can never be mistaken for the green of a
+                   graded-correct answer. */
+                let cardStyle = 'border-outline-variant bg-surface-container-lowest hover:border-secondary/50 hover:shadow-card'
+                let badgeStyle = 'border-outline-variant bg-surface-container-low text-on-surface-variant'
+                let badgeContent = OPTION_LETTERS[optIdx] || String(optIdx + 1)
+                let statusLabel = null
+
+                if (isSubmitted) {
+                  if (isCorrectAnswer) {
+                    cardStyle = 'border-topic-emerald bg-topic-emerald/10 ring-2 ring-topic-emerald/25'
+                    badgeStyle = `border-topic-emerald bg-topic-emerald ${ACCENT_INK}`
+                    badgeContent = <span className="material-symbols-outlined text-[18px]">check</span>
+                    statusLabel = isSelected ? 'Correct — your answer' : 'Correct answer'
+                  } else if (isSelected) {
+                    cardStyle = 'border-error bg-error/10 ring-2 ring-error/25'
+                    badgeStyle = 'border-error bg-error text-on-error'
+                    badgeContent = <span className="material-symbols-outlined text-[18px]">close</span>
+                    statusLabel = 'Your answer'
+                  } else {
+                    cardStyle = 'border-outline-variant bg-surface-container-lowest opacity-60'
+                  }
+                } else if (isSelected) {
+                  cardStyle = 'border-tertiary bg-tertiary/10 ring-2 ring-tertiary/25'
+                  badgeStyle = 'border-tertiary bg-tertiary text-on-tertiary'
+                }
+
+                return (
+                  <label
+                    key={key}
+                    className={`block cursor-pointer transition-all active-press ${isSubmitted ? 'pointer-events-none' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="quiz-option"
+                      value={key}
+                      checked={isSelected}
+                      onChange={() => setSelectedOption(key)}
+                      className="peer sr-only"
+                      disabled={isSubmitted}
+                    />
+                    {/* The real radio is visually hidden, so its focus ring has
+                        to be forwarded onto the card the user actually sees. */}
+                    <div className={`h-full rounded-xl border p-4 flex items-start gap-3 transition-all duration-200 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-secondary ${cardStyle}`}>
+                      <span
+                        className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center text-[13px] font-bold transition-colors ${badgeStyle}`}
+                        aria-hidden="true"
+                      >
+                        {badgeContent}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className={`block text-on-surface ${isCodeLike(value) ? 'font-code-block text-code-block' : 'text-body-md'}`}>
+                          {value}
+                        </span>
+                        {statusLabel && (
+                          <span className="mt-1 block text-[11px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">
+                            {statusLabel}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+
+            {/* Correct/Incorrect Explanation Card */}
+            {isSubmitted && (
+              <div
+                className={`mt-5 rounded-xl border p-4 sm:p-5 flex gap-3 items-start animate-fade-in ${
+                  selectedOption === currentQuestion.answer
+                    ? 'border-topic-emerald/40 bg-topic-emerald/10'
+                    : 'border-error/40 bg-error/10'
+                }`}
+              >
+                <span
+                  className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${
+                    selectedOption === currentQuestion.answer
+                      ? `bg-topic-emerald ${ACCENT_INK}`
+                      : 'bg-error text-on-error'
+                  }`}
+                >
+                  <span className="material-symbols-outlined filled text-[20px]">
+                    {selectedOption === currentQuestion.answer ? 'check_circle' : 'cancel'}
+                  </span>
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-headline-sm text-primary mb-1">
+                    {selectedOption === currentQuestion.answer ? 'Correct!' : 'Incorrect Answer'}
+                  </h3>
+                  <p className="text-body-md text-on-surface-variant max-w-prose">
+                    {currentQuestion.explanation}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="mt-6 pt-5 border-t border-outline-variant flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-body-sm text-on-surface-variant">
+                {isSubmitted
+                  ? currentIdx + 1 < totalQuestions
+                    ? `${totalQuestions - currentIdx - 1} question${totalQuestions - currentIdx - 1 === 1 ? '' : 's'} to go.`
+                    : 'That was the last question.'
+                  : 'Pick an option, then submit to see the explanation.'}
+              </p>
+
+              {!isSubmitted ? (
+                <button
+                  onClick={handleSubmit}
+                  disabled={!selectedOption}
+                  className={`inline-flex items-center justify-center gap-2 rounded-lg text-label-md px-6 py-3 transition-all shrink-0 ${
+                    selectedOption
+                      ? 'bg-secondary text-on-secondary shadow-brand hover:shadow-brand-hover cursor-pointer hover-lift active-press'
+                      : 'bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  Submit answer
+                  <span className="material-symbols-outlined text-[18px]">send</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-secondary text-on-secondary text-label-md px-6 py-3 shadow-brand hover:shadow-brand-hover transition-all shrink-0 hover-lift active-press"
+                >
+                  {currentIdx + 1 < totalQuestions ? 'Next question' : 'Finish quiz'}
+                  <span className="material-symbols-outlined text-[18px]">
+                    {currentIdx + 1 < totalQuestions ? 'arrow_forward' : 'flag'}
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </main>

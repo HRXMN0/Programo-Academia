@@ -3,14 +3,28 @@ import Footer from './Footer'
 import Chatbot from './Chatbot'
 import { useRouter } from 'next/router'
 import { useAuth } from '../context/AuthContext'
-import Script from 'next/script'
 import { Analytics } from "@vercel/analytics/react"
 
-export const metadata = {
-  title: "Programo Academia - Learn Coding, DSA & All Tech in One Place",
-  description:
-    "Learn programming, DSA, and all major technologies. Practice coding with our built-in compiler and boost your skills with AI assistance.",
-};
+// One entry per toast type, so every variant gets a matching icon, accent rail
+// and tinted icon tile instead of a bare glyph. Unknown types fall back to info
+// rather than rendering no icon at all.
+const TOAST_VARIANTS = {
+  success: {
+    icon: 'check_circle',
+    rail: 'bg-secondary',
+    tile: 'bg-secondary-container text-on-secondary-container',
+  },
+  error: {
+    icon: 'error',
+    rail: 'bg-error',
+    tile: 'bg-error-container text-on-error-container',
+  },
+  info: {
+    icon: 'info',
+    rail: 'bg-tertiary',
+    tile: 'bg-tertiary-container text-on-tertiary-container',
+  },
+}
 
 export default function Layout({ children }) {
   const router = useRouter()
@@ -25,24 +39,27 @@ export default function Layout({ children }) {
 
   const hideFooter = isLessonReader || isQuiz || isAuth
 
+  const toastVariant = (toast && TOAST_VARIANTS[toast.type]) || TOAST_VARIANTS.info
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      
-      {/* Cloudflare script (if still needed) */}
-      <Script
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-        strategy="afterInteractive"
-      />
+      {/* Keyboard users get past the whole nav in one tab. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:rounded-lg focus:bg-secondary focus:px-4 focus:py-2 focus:font-label-md focus:text-label-md focus:text-on-secondary focus:shadow-brand"
+      >
+        Skip to content
+      </a>
 
       {/* Navbar */}
       {!isAuth && <Navbar />}
 
       {/* Main Content */}
-      <main className={`flex-grow flex flex-col ${!isAuth ? 'pt-16' : ''}`}>
+      <main id="main-content" className={`flex-grow flex flex-col ${!isAuth ? 'pt-16' : ''}`}>
         {children}
       </main>
 
-      {/* ✅ Vercel Analytics (CORRECT PLACE) */}
+      {/* Vercel Analytics */}
       <Analytics />
 
       {/* Chatbot */}
@@ -53,32 +70,22 @@ export default function Layout({ children }) {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-gutter right-gutter z-50 animate-fade-in max-w-sm">
-          <div className="bg-surface-container-lowest dark:bg-surface-high backdrop-blur-md border border-outline-variant dark:border-outline shadow-[0px_4px_24px_rgba(0,0,0,0.1)] dark:shadow-[0px_8px_32px_rgba(0,0,0,0.3)] rounded-xl p-4 flex items-start gap-3">
-            
-            {toast.type === 'success' && (
-              <span className="material-symbols-outlined text-secondary dark:text-secondary-fixed">
-                check_circle
-              </span>
-            )}
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-gutter right-gutter z-50 animate-fade-in w-[calc(100%-3rem)] max-w-sm"
+        >
+          <div className="relative flex items-start gap-3 overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-4 pl-5 shadow-lifted">
+            {/* Colour rail: the fastest read on whether this went well or not. */}
+            <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 ${toastVariant.rail}`} />
 
-            {toast.type === 'error' && (
-              <span className="material-symbols-outlined text-error">
-                error
-              </span>
-            )}
+            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${toastVariant.tile}`}>
+              <span className="material-symbols-outlined text-[20px]">{toastVariant.icon}</span>
+            </span>
 
-            {toast.type === 'info' && (
-              <span className="material-symbols-outlined text-primary">
-                info
-              </span>
-            )}
-
-            <div className="flex-1">
-              <p className="text-body-md text-on-surface dark:text-inverse-on-surface font-medium leading-tight">
-                {toast.message}
-              </p>
-            </div>
+            <p className="flex-1 self-center text-body-sm font-medium leading-snug text-on-surface">
+              {toast.message}
+            </p>
           </div>
         </div>
       )}

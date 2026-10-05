@@ -1,447 +1,754 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
+import Head from 'next/head'
 import HomeSearchBar from '../components/HomeSearchBar'
+import { useAuth } from '../context/AuthContext'
+import { topics } from '../data/topics'
+import { cppModules } from '../data/cppModules'
+import { interviewQuestions } from '../data/interviewQuestions'
+
+// Short labels so the roadmap still fits across six nodes on a phone.
+const ROADMAP_LABELS = {
+  'arrays': 'Arrays',
+  'linked-lists': 'Lists',
+  'stacks-queues': 'Stacks',
+  'trees': 'Trees',
+  'graphs': 'Graphs',
+  'dynamic-programming': 'DP'
+}
+
+// One accent per DSA topic, so the syllabus stops reading as six identical grey
+// cards. Written out in full because Tailwind only emits class strings it can
+// find literally in the source — `bg-topic-${slug}` never generates.
+// Hue is always reinforcement, never the only signal: every colour-coded element
+// here also carries a text label, so nothing is communicated by colour alone.
+const TOPIC_ACCENTS = {
+  'arrays': { tile: 'bg-topic-blue/15 text-topic-blue ring-topic-blue/30', rail: 'bg-topic-blue', hover: 'hover:border-topic-blue/50' },
+  'linked-lists': { tile: 'bg-topic-violet/15 text-topic-violet ring-topic-violet/30', rail: 'bg-topic-violet', hover: 'hover:border-topic-violet/50' },
+  'stacks-queues': { tile: 'bg-topic-amber/20 text-topic-amber ring-topic-amber/40', rail: 'bg-topic-amber', hover: 'hover:border-topic-amber/50' },
+  'trees': { tile: 'bg-topic-emerald/15 text-topic-emerald ring-topic-emerald/30', rail: 'bg-topic-emerald', hover: 'hover:border-topic-emerald/50' },
+  'graphs': { tile: 'bg-topic-rose/15 text-topic-rose ring-topic-rose/30', rail: 'bg-topic-rose', hover: 'hover:border-topic-rose/50' },
+  'dynamic-programming': { tile: 'bg-topic-cyan/15 text-topic-cyan ring-topic-cyan/30', rail: 'bg-topic-cyan', hover: 'hover:border-topic-cyan/50' }
+}
+const TOPIC_ACCENT_FALLBACK = { tile: 'bg-secondary/15 text-secondary ring-secondary/30', rail: 'bg-secondary', hover: 'hover:border-secondary/50' }
+
+// Difficulty badges use the container/on-container token pairs instead of the raw
+// topic accents. Those pairs are guaranteed legible against each other in both
+// themes, which an amber-on-white badge is not.
+const DIFFICULTY_BADGES = {
+  easy: 'bg-secondary-container text-on-secondary-container',
+  medium: 'bg-tertiary-container text-on-tertiary-container',
+  hard: 'bg-error-container text-on-error-container'
+}
+
+// The only language this site actually teaches. The band that used to sit on this
+// page scrolled six logos under "Loved by developers, trusted by engineering
+// leaders" — five of them for languages we do not cover, two of those with
+// malformed paths that rendered as blobs. Honest single mark instead.
+function CppMark({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 128 128" fill="currentColor" aria-hidden="true">
+      <path d="M117.5 73.5h-17v17h-11v-17h-17v-11h17v-17h11v17h17v11zm-52.6-39.8c-2.7-4.1-6.4-7.5-11-9.9-4.5-2.4-9.8-3.7-15.6-3.7-8.1 0-15.2 2-21.2 6.1-6.1 4.1-10.7 9.8-13.8 17.2-3.1 7.4-4.7 16.1-4.7 26.2 0 10 1.6 18.7 4.7 26.1 3.1 7.4 7.7 13.1 13.8 17.2 6.1 4.1 13.2 6.1 21.2 6.1 5.9 0 11.2-1.3 15.8-3.9 4.6-2.6 8.3-6.1 10.9-10.4l9.1 5.8c-3.6 5.8-8.7 10.4-15 13.8-6.4 3.4-13.6 5-21.6 5-10.3 0-19.3-2.5-27-7.6-7.7-5.1-13.7-12.2-17.8-21.3C1.6 92.5.5 81.7.5 69.6s1.1-22.9 3.2-32c4.1-9.1 10.1-16.2 17.8-21.3 7.7-5.1 16.7-7.6 27-7.6 7.7 0 14.8 1.6 21.1 4.9C76 17 81 21.4 84.7 27l-9.1 6.7z" />
+    </svg>
+  )
+}
+
 export default function Home() {
-  const languages = [
-    { name: 'C++', icon: (
-      <svg className="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="currentColor">
-        <path d="M117.5 73.5h-17v17h-11v-17h-17v-11h17v-17h11v17h17v11zm-52.6-39.8c-2.7-4.1-6.4-7.5-11-9.9-4.5-2.4-9.8-3.7-15.6-3.7-8.1 0-15.2 2-21.2 6.1-6.1 4.1-10.7 9.8-13.8 17.2-3.1 7.4-4.7 16.1-4.7 26.2 0 10 1.6 18.7 4.7 26.1 3.1 7.4 7.7 13.1 13.8 17.2 6.1 4.1 13.2 6.1 21.2 6.1 5.9 0 11.2-1.3 15.8-3.9 4.6-2.6 8.3-6.1 10.9-10.4l9.1 5.8c-3.6 5.8-8.7 10.4-15 13.8-6.4 3.4-13.6 5-21.6 5-10.3 0-19.3-2.5-27-7.6-7.7-5.1-13.7-12.2-17.8-21.3C1.6 92.5.5 81.7.5 69.6s1.1-22.9 3.2-32c4.1-9.1 10.1-16.2 17.8-21.3 7.7-5.1 16.7-7.6 27-7.6 7.7 0 14.8 1.6 21.1 4.9C76 17 81 21.4 84.7 27l-9.1 6.7z"/>
-      </svg>
-    )},
-    { name: 'Java', icon: (
-      <svg className="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="currentColor">
-        <path d="M84.7 94.4c.7 1.4.3 2.9-1.2 3.6-7.2 3.3-15.4 5.1-23.7 5.1-19.8 0-35.8-9.8-35.8-21.8 0-10.1 11.4-18.7 26.8-21l1.8.8c-12.7 2.4-21.8 9.3-21.8 17 0 9.2 13.9 16.7 30.9 16.7 6.8 0 13.4-.8 19.3-2.4 1.7-.5 3 .3 3.7 2zm15-18.8c-.8 0-1.6.4-2.1 1-5.7 6.5-16.1 10.9-27.9 10.9-18.6 0-33.8-10.9-33.8-24.3 0-12.8 13.9-23.3 31.4-24.3 1.1-.1 1.9-.9 2-2V39c-19.6 1.1-35.4 12.8-35.4 27.2 0 15.6 17.4 28.3 38.8 28.3 13 0 24.8-4.7 31.2-11.8.8-1 1-2.4.2-3.3l-4.4-3.8zM61.9 0L58.2.8c6 8.3 4 19-3.9 23-1.6.8-2.3 2.6-1.5 4.2l1.6 3.1c11.1-6.1 14.7-20.7 7.5-31.1zM110.2 60.3c-.6-1.1-1.9-1.5-3-1-3.6 1.7-8 2.6-12.5 2.6-16.4 0-29.7-11.8-29.7-26.3 0-6 2.3-11.7 6.4-16.1 1-1.1.9-2.8-.2-3.8L68 13c-6.1 6.5-9.6 15.2-9.6 24.3 0 19.5 17.8 35.3 39.7 35.3 6.6 0 13-1.4 18.5-3.9 1.1-.6 1.6-1.9 1-3l-2.4-4.8zM41.7 82.2c1.7.5 3 .3 3.7 2 .7 1.4.3 2.9-1.2 3.6-7.2 3.3-15.4 5.1-23.7 5.1-19.8 0-35.8-9.8-35.8-21.8 0-10.1 11.4-18.7 26.8-21l1.8.8c-12.7 2.4-21.8 9.3-21.8 17 0 9.2 13.9 16.7 30.9 16.7 6.8 0 13.4-.8 19.3-2.4z"/>
-      </svg>
-    )},
-    { name: 'Python', icon: (
-      <svg className="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="currentColor">
-        <path d="M64 0C28.7 0 31.6 15.5 31.6 15.5l.1 16.1h32.6v4.6H16.1S0 33.7 0 69c0 35.3 13.8 33.7 13.8 33.7h8.3v-11.6c0-17.2 14.1-17.2 14.1-17.2h28.1s13.8.3 13.8-13.3V31.6S78.4 15.5 64 15.5c-12.4 0-19.9 0-19.9 0s0-5.7 3.2-8.3C50.5 4.6 57.8 0 64 0zm-15.5 8.2c2.3 0 4.1 1.9 4.1 4.1s-1.9 4.1-4.1 4.1-4.1-1.9-4.1-4.1 1.9-4.1 4.1-4.1zm15.5 119.8c35.3 0 32.4-15.5 32.4-15.5l-.1-16.1H63.7v-4.6h48.2s16.1 2.5 16.1-32.8c0-35.3-13.8-33.7-13.8-33.7h-8.3v11.6c0 17.2-14.1 17.2-14.1 17.2H64.1s-13.8-.3-13.8 13.3v28.8s-2.1 16.1 12.3 16.1c12.4 0 19.9 0 19.9 0s0 5.7-3.2 8.3c-3.3 2.6-10.6 7.2-16.8 7.2zm15.5-8.2c-2.3 0-4.1-1.9-4.1-4.1s1.9-4.1 4.1-4.1 4.1 1.9 4.1 4.1-1.9 4.1-4.1 4.1z"/>
-      </svg>
-    )},
-    { name: 'JavaScript', icon: (
-      <svg className="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="currentColor">
-        <rect x="8" y="8" width="112" height="112" rx="18" fill="none" stroke="currentColor" strokeWidth="10"/>
-        <text x="64" y="86" fill="currentColor" fontSize="54" fontWeight="900" fontFamily="system-ui, sans-serif" textAnchor="middle">JS</text>
-      </svg>
-    )},
-    { name: 'TypeScript', icon: (
-      <svg className="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="currentColor">
-        <rect x="8" y="8" width="112" height="112" rx="18" fill="none" stroke="currentColor" strokeWidth="10"/>
-        <text x="64" y="86" fill="currentColor" fontSize="54" fontWeight="900" fontFamily="system-ui, sans-serif" textAnchor="middle">TS</text>
-      </svg>
-    )},
-    { name: 'Go', icon: (
-      <svg className="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="currentColor">
-        <path d="M115.3 54.8c-.8-2.9-2.3-5.5-4.5-7.7-2.2-2.2-4.9-3.8-8-5-3.1-1.1-6.5-1.7-10.2-1.7-5.1 0-9.7 1.1-13.8 3.2-4.1 2.1-7.3 5.1-9.7 9-2.3 3.9-3.5 8.4-3.5 13.5v.1c0 5 1.2 9.5 3.5 13.4 2.3 3.9 5.5 6.9 9.5 9 4.1 2.1 8.7 3.2 13.9 3.2 4.5 0 8.6-.8 12.3-2.5 3.7-1.7 6.6-4.1 8.8-7.3V67.8H88.9v7.9h18.2c-.3 2.7-1.6 5-3.8 6.8-2.2 1.8-5.3 2.7-9.4 2.7-3.9 0-7.2-1.1-9.9-3.2-2.7-2.1-4.5-5.2-5.4-9.3-.1-.4-.1-.9-.1-1.4v-.1c0-.6 0-1.1.1-1.7.9-4.1 2.7-7.2 5.5-9.3s6.1-3.2 10.1-3.2c3.5 0 6.5.8 8.8 2.4 2.3 1.6 3.9 3.8 4.6 6.6h7.7zm-60.8 1.4V56c0-5 1.2-9.5 3.5-13.4s5.5-6.9 9.5-9 8.7-3.2 13.9-3.2 9.7 1.1 13.8 3.2 7.3 5.1 9.7 9c2.3 3.9 3.5 8.4 3.5 13.5v.1c0 5-1.2 9.5-3.5 13.4-2.3 3.9-5.5 6.9-9.5 9-4.1 2.1-8.7 3.2-13.9 3.2s-9.7-1.1-13.8-3.2-7.3-5.1-9.7-9c-2.3-3.8-3.5-8.3-3.5-13.4zm7.9.1c0 3.7 1.1 6.8 3.2 9.2 2.1 2.4 5.1 3.6 8.9 3.6s6.8-1.2 8.9-3.6 3.2-5.5 3.2-9.2v-.1c0-3.7-1.1-6.8-3.2-9.2s-5.1-3.6-8.9-3.6-6.8 1.2-8.9 3.6c-2.2 2.4-3.2 5.5-3.2 9.2v.1z"/>
-      </svg>
-    )},
-    { name: 'Rust', icon: (
-      <svg className="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="currentColor">
-        <path d="M119.8 62.4l-3-4.8 4-4-5-2.7 1.2-5.5-5.6-1.1.8-5.6-5.6-.4-.3-5.7-5.4.9-1.4-5.5-5 .2-2.5-5.1-4.4 1.4-3.5-4.5-3.5 2.5-4.5-3.5-2.5 3.5-5-2.5-1.4 4.5-5.1-1.4-1.2 5-5.5-.2-.3 5.6-5.6.4.8 5.6-5.6 1.1 1.2 5.5-5 2.7 4 4-3 4.8 5 3.8-2 5.3 5.4.9.4 5.7c-4 3-4.1 4.5-4.1 4.5h8.3s.1-1.5 4.1-4.5l-.4-5.7-5.4-.9 2-5.3-5-3.8 3-4.8-4-4 5-2.7-1.2-5.5 5.6-1.1-.8-5.6 5.6-.4.3-5.7 5.4-.9 1.4-5.5 5-.2 2.5-5.1 4.4-1.4 3.5-4.5 3.5-2.5 4.5-3.5 2.5-3.5 5 2.5 1.4-4.5 5.1 1.4 1.2-5 5.5.2.3-5.6 5.6-.4-.8-5.6 5.6-1.1-1.2-5.5 5-2.7-4-4 3-4.8-5-3.8 2-5.3-5.4-.9-.4-5.7c4-3 4.1-4.5 4.1-4.5h-8.3s-.1 1.5-4.1 4.5l.4 5.7 5.4.9-2 5.3 5 3.8zM64 24a40 40 0 110 80 40 40 0 010-80z"/>
-      </svg>
-    )}
-  ];
+  const { completedTopics = [], isLoaded } = useAuth()
+
+  const dsaTopics = topics.filter(t => t.track === 'dsa').sort((a, b) => a.order - b.order)
+
+  // Only trust progress once auth/localStorage has resolved. Before that the server
+  // renders an empty set and so must the first client pass, or React reports a
+  // hydration mismatch.
+  const done = isLoaded ? new Set(completedTopics) : new Set()
+  const completedCount = dsaTopics.filter(t => done.has(t.id)).length
+  const progressPct = dsaTopics.length > 0
+    ? Math.round((completedCount / dsaTopics.length) * 100)
+    : 0
+  const nextTopic = dsaTopics.find(t => !done.has(t.id)) || null
+
+  const roadmap = dsaTopics.map(t => ({
+    id: t.id,
+    slug: t.slug,
+    label: ROADMAP_LABELS[t.id] || t.title,
+    // Full title and icon carried through so a node can announce itself properly
+    // and show what it actually is, instead of a padlock — nothing here is locked.
+    title: t.title,
+    icon: t.iconName,
+    status: done.has(t.id)
+      ? 'done'
+      : nextTopic && t.id === nextTopic.id
+        ? 'active'
+        : 'upcoming'
+  }))
+
+  // Counted from the same modules the curriculum pages render, so these numbers
+  // can never drift away from what is actually published.
+  const heroStats = [
+    { icon: 'account_tree', value: dsaTopics.length, label: 'DSA topics' },
+    { icon: 'data_object', value: cppModules.length, label: 'C++ modules' },
+    { icon: 'quiz', value: interviewQuestions.length, label: 'interview questions' },
+    { icon: 'verified', value: 'Free', label: 'no sign-up, ever' }
+  ]
 
   return (
     <div className="relative w-full overflow-hidden bg-background">
-      {/* Decorative Background Patterns & Corner Glows */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0"></div>
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
-      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none z-0"></div>
+      <Head>
+        <title>Programo Academia — Learn C++ and DSA with Clarity</title>
+        <meta
+          name="description"
+          content="Free, structured lessons in C++ and data structures & algorithms, with an in-browser compiler, topic quizzes and an AI tutor. Browse everything without an account."
+        />
+      </Head>
 
-      <main className="relative z-10 w-full max-w-container-max mx-auto px-gutter animate-fade-in">
-        {/* Hero Section */}
-        <section className="relative py-xl flex flex-col items-center justify-center text-center min-h-[60vh] overflow-visible">
-          {/* Soft Radial Glow behind Hero content */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,107,92,0.03)_0%,transparent_60%)] pointer-events-none z-0"></div>
-          
-          {/* Tiny floating decorative dots in background */}
-          <div className="absolute top-[20%] left-[15%] w-2 h-2 rounded-full bg-secondary animate-pulse opacity-60 filter blur-[1px]"></div>
-          <div className="absolute bottom-[25%] right-[12%] w-3 h-3 rounded-full bg-primary animate-pulse opacity-40 filter blur-[2px] [animation-delay:1s]"></div>
-          <div className="absolute top-[60%] left-[8%] w-1.5 h-1.5 rounded-full bg-secondary-fixed animate-ping opacity-35"></div>
+      {/* Decorative field. The previous version layered a 3%-alpha grid and two
+          500px glows at 5% opacity — invisible at every screen brightness, but
+          still three DOM nodes. These are tuned to actually read. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[620px] bg-grid-fade bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,#000_50%,transparent_100%)]" />
+      <div className="pointer-events-none absolute -left-32 -top-24 z-0 h-[420px] w-[420px] rounded-full bg-secondary/25 blur-3xl dark:bg-secondary/20" />
+      <div className="pointer-events-none absolute -right-32 top-4 z-0 h-[380px] w-[380px] rounded-full bg-tertiary/20 blur-3xl dark:bg-tertiary/15" />
 
-          {/* Container Wrapper */}
-          <div className="w-full max-w-[1200px] mx-auto px-6 md:px-8 lg:px-12 relative z-10 flex flex-col items-center gap-lg text-center">
-            {/* Search Bar Component */}
-            <HomeSearchBar />
+      <main className="relative z-10 mx-auto w-full max-w-container-max animate-fade-in px-gutter pb-16">
 
-            <span className="relative bg-surface-container-high text-on-surface-variant font-label-md text-label-md px-sm py-xs rounded-full inline-block border border-outline-variant">
-              {/* Pulsing indicator badge */}
-              <span className="absolute -left-1 -top-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
-              </span>
-              Structured for Success
+        {/* ── Hero ─────────────────────────────────────────────────────────────
+            Was min-h-[60vh] + py-xl around ~200px of content, so the fold read as
+            an empty page. Now it is sized by its content. */}
+        <section className="flex flex-col items-center pb-10 pt-8 text-center md:pb-14 md:pt-12">
+          <span className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest/80 px-3.5 py-1.5 font-label-md text-label-md text-on-surface-variant shadow-card backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-secondary"></span>
             </span>
+            Built for students starting from zero
+          </span>
 
-            <h1 className="font-display-lg text-display-lg md:text-5xl lg:text-display-lg text-primary tracking-tight font-bold">
-              Master DSA with <span className="bg-gradient-to-r from-secondary via-[#008d7c] to-[#0b1f3a] dark:from-secondary-fixed dark:to-primary-fixed bg-clip-text text-transparent">Clarity</span>
-            </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
-              Structured learning paths designed for modern engineers. Master patterns, not just problems.
+          <h1 className="mt-6 max-w-4xl font-display-lg text-[2.5rem] font-extrabold leading-[1.06] tracking-[-0.04em] text-primary sm:text-5xl lg:text-6xl lg:leading-[1.03]">
+            Master C++ and DSA with{' '}
+            <span className="inline-block bg-gradient-to-r from-secondary to-tertiary bg-clip-text pb-[0.08em] text-transparent dark:from-secondary-fixed dark:to-tertiary-fixed-dim">
+              clarity
+            </span>
+          </h1>
+
+          <p className="mt-5 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
+            Structured lessons, an in-browser compiler and topic quizzes — one language,
+            taught properly. Read every page without making an account.
+          </p>
+
+          <div className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <Link
+              href="/dsa"
+              className="group inline-flex items-center justify-center gap-2 rounded-lg bg-secondary px-7 py-4 font-label-md text-base font-bold text-on-secondary shadow-brand transition-all duration-200 ease-out-expo hover:-translate-y-0.5 hover:shadow-brand-hover active:translate-y-0"
+            >
+              Start learning free
+              <span className="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+            </Link>
+            <Link
+              href="/dsa"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-7 py-4 font-label-md text-base font-semibold text-on-surface shadow-card transition-all duration-200 ease-out-expo hover:-translate-y-0.5 hover:border-secondary/60 hover:text-primary hover:shadow-card-hover active:translate-y-0"
+            >
+              <span className="material-symbols-outlined text-[20px] text-secondary">list_alt</span>
+              Browse the syllabus
+            </Link>
+          </div>
+
+          {/* Three honest promises, not a testimonial wall. */}
+          <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-body-sm text-body-sm text-on-surface-variant">
+            {['No account required to read', 'In-browser C++ compiler', 'Every lesson free, forever'].map(item => (
+              <li key={item} className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined filled text-[16px] text-secondary">check_circle</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-10 w-full">
+            <HomeSearchBar />
+          </div>
+
+          {/* Real numbers, straight from the data files — this band replaces the
+              scrolling logo marquee that claimed six languages we do not teach. */}
+          <div className="w-full rounded-2xl border border-outline-variant bg-surface-container-lowest/80 shadow-card backdrop-blur-sm">
+            <dl className="grid grid-cols-2 sm:grid-cols-4">
+              {heroStats.map((stat, idx) => {
+                // Hairlines only where two tiles actually sit side by side: the
+                // grid reflows from two columns to four, so the rules do too.
+                const separators = [
+                  '',
+                  'border-l border-outline-variant',
+                  'border-t border-outline-variant sm:border-l sm:border-t-0',
+                  'border-l border-t border-outline-variant sm:border-t-0'
+                ]
+                return (
+                  <div
+                    key={stat.label}
+                    className={`flex flex-col items-center gap-1 px-3 py-5 ${separators[idx] || ''}`}
+                  >
+                    <span className="material-symbols-outlined order-1 text-[20px] text-secondary">{stat.icon}</span>
+                    {/* dt before dd keeps the list valid; `order` puts the number on top. */}
+                    <dt className="order-3 font-body-sm text-body-sm text-on-surface-variant">{stat.label}</dt>
+                    <dd className="order-2 font-headline-md text-headline-md text-primary">{stat.value}</dd>
+                  </div>
+                )
+              })}
+            </dl>
+          </div>
+
+          <p className="mt-4 flex items-center justify-center gap-2 font-body-sm text-body-sm text-on-surface-variant">
+            <CppMark className="h-4 w-4 shrink-0 text-secondary" />
+            Every example on this site is written in modern C++.
+          </p>
+        </section>
+
+        {/* ── How it works ─────────────────────────────────────────────────── */}
+        <section className="border-t border-outline-variant py-12 md:py-16">
+          <div className="flex max-w-2xl flex-col gap-3">
+            <span className="inline-flex items-center gap-2 font-label-md text-label-md uppercase tracking-[0.14em] text-secondary">
+              <span className="h-px w-6 bg-secondary/60"></span>
+              How it works
+            </span>
+            <h2 className="font-headline-lg text-headline-lg-mobile text-primary md:text-headline-lg">
+              Read it, run it, then prove you know it
+            </h2>
+            <p className="max-w-prose font-body-md text-body-md text-on-surface-variant">
+              Each topic pairs the intuition with runnable C++ and a complexity table, and your
+              progress is tracked as you go — no account, it stays on this device.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-sm w-full sm:w-auto justify-center items-center">
-              <Link href="/dsa" className="w-full sm:w-[240px] bg-secondary text-on-secondary font-label-md text-label-md px-4 py-3 rounded shadow-[0_0_20px_rgba(0,107,92,0.2)] dark:shadow-[0_0_20px_rgba(104,250,222,0.15)] transition-all duration-300 hover:scale-[1.02] hover:bg-secondary/90 active:scale-[0.98] flex items-center justify-center">
-                Start Learning
-              </Link>
-              <Link href="/dsa" className="w-full sm:w-[240px] border border-primary/80 dark:border-primary-fixed/80 text-primary dark:text-primary-fixed bg-transparent font-label-md text-label-md px-4 py-3 rounded transition-all duration-300 hover:scale-[1.02] hover:border-primary dark:hover:border-primary-fixed hover:bg-surface-container-low dark:hover:bg-surface-high hover:shadow-[0_0_15px_rgba(11,31,58,0.06)] active:scale-[0.98] flex items-center justify-center">
-                Explore Curriculum
-              </Link>
-            </div>
           </div>
-        </section>
 
-        {/* See How It Works Section */}
-        <section className="py-16 md:py-24 border-t border-outline-variant relative overflow-visible z-10">
-          {/* Ultra-Subtle Top Transition Fade */}
-          <div className="bg-gradient-to-b from-background via-surface-container-lowest/[0.01] to-background h-8 w-full absolute -top-4 left-0 pointer-events-none z-10"></div>
-          
-          <div className="w-full max-w-[1200px] mx-auto px-6 md:px-8 lg:px-12 relative z-10 flex flex-col">
-            
-            {/* Left-Aligned Header Block */}
-            <div className="flex flex-col items-start text-left gap-xs mb-12 relative z-10 max-w-2xl">
-              <h2 className="font-headline-lg text-headline-lg text-primary font-bold tracking-tight">
-                See How It Works
-              </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">
-                Interactive code intuition, guided curriculum, and real-time skill tracking.
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+
+            {/* Code panel. Deliberately dark in both themes: the contrast against
+                the page is the point, so raw hex is allowed to live in here. */}
+            <div className="lg:col-span-7">
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0D1117] shadow-lifted transition-shadow duration-300 hover:shadow-card-hover">
+                <div className="flex items-center gap-3 border-b border-white/10 bg-[#161B22] px-4 py-3">
+                  <div className="flex gap-2">
+                    <span className="h-3 w-3 rounded-full bg-[#FF5F56]"></span>
+                    <span className="h-3 w-3 rounded-full bg-[#FFBD2E]"></span>
+                    <span className="h-3 w-3 rounded-full bg-[#27C93F]"></span>
+                  </div>
+                  <span className="flex-1 text-center font-mono text-xs tracking-wide text-[#8B949E]">
+                    binary_search.cpp
+                  </span>
+                  <span className="rounded-full border border-secondary-fixed/30 bg-secondary-fixed/10 px-2.5 py-1 font-mono text-[11px] text-secondary-fixed">
+                    O(log N)
+                  </span>
+                </div>
+
+                <div className="no-scrollbar overflow-x-auto p-5 md:p-6">
+                  <pre className="scrollbar-none font-mono text-xs leading-relaxed tracking-normal text-[#F8F8F2] md:text-sm">
+                    <code>
+                      <span className="mb-2 block text-[#7F8DB8]">// Time Complexity: O(log N) | Space Complexity: O(1)</span>
+                      <span className="text-[#FF79C6]">int</span> <span className="text-[#50FA7B]">binarySearch</span>(<span className="text-[#8BE9FD]">int</span> arr[], <span className="text-[#8BE9FD]">int</span> l, <span className="text-[#8BE9FD]">int</span> r, <span className="text-[#8BE9FD]">int</span> x) {"{"}
+                      {"\n"}{"  "}<span className="text-[#FF79C6]">while</span> (l &lt;= r) {"{"}
+                      {"\n"}{"    "}<span className="text-[#FF79C6]">int</span> mid = l + (r - l) / <span className="text-[#BD93F9]">2</span>;
+                      {"\n"}
+                      {"\n"}{"    "}<span className="text-[#FF79C6]">if</span> (arr[mid] == x)
+                      {"\n"}{"      "}<span className="text-[#FF79C6]">return</span> mid;
+                      {"\n"}
+                      {"\n"}{"    "}<span className="text-[#FF79C6]">if</span> (arr[mid] &lt; x)
+                      {"\n"}{"      "}l = mid + <span className="text-[#BD93F9]">1</span>;
+                      {"\n"}{"    "}<span className="text-[#FF79C6]">else</span>
+                      {"\n"}{"      "}r = mid - <span className="text-[#BD93F9]">1</span>;
+                      {"\n"}{"  "}{"}"}
+                      {"\n"}{"  "}<span className="text-[#FF79C6]">return</span> -<span className="text-[#BD93F9]">1</span>;
+                      {"\n"}{"}"}
+                    </code>
+                  </pre>
+                </div>
+
+                {/* Was absolutely positioned inside the scroll container, so it slid
+                    away with the code. It is a real footer bar now. */}
+                <div className="flex items-center justify-between gap-3 border-t border-white/10 bg-[#0B0F16] px-4 py-3">
+                  <span className="font-mono text-[11px] text-[#8B949E]">halves the search space every step</span>
+                  <Link
+                    href="/compiler"
+                    className="group inline-flex items-center gap-2 rounded-lg border border-secondary-fixed/30 bg-secondary-fixed/10 px-3.5 py-2 font-mono text-xs text-secondary-fixed transition-colors duration-200 hover:bg-secondary-fixed/20"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-secondary-fixed"></span>
+                    Try it live
+                    <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+                  </Link>
+                </div>
+              </div>
+
+              <p className="mt-4 border-l-2 border-secondary/50 pl-3 font-body-sm text-body-sm text-on-surface-variant">
+                Every snippet on the site is complete, compilable C++ — open it in the compiler
+                and change it while the idea is still fresh.
               </p>
             </div>
 
-            {/* Grid Layout (Tighter gap) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-              
-              {/* Left Column: Code Editor */}
-              <div className="relative">
-                {/* Faint Glow Backdrop */}
-                <div className="absolute -inset-4 bg-secondary/[0.02] rounded-2xl blur-3xl pointer-events-none z-0"></div>
-                
-                {/* Code Editor Card */}
-                <div className="relative z-10 bg-[#0D1117] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.4)] hover:shadow-[0_25px_60px_rgba(0,107,92,0.15)] hover:border-secondary/25 rounded-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden">
-                  <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 bg-[#161b22]">
-                    <div className="flex gap-2">
-                      <span className="w-3 h-3 rounded-full bg-[#FF5F56]"></span>
-                      <span className="w-3 h-3 rounded-full bg-[#FFBD2E]"></span>
-                      <span className="w-3 h-3 rounded-full bg-[#27C93F]"></span>
-                    </div>
-                    <div className="text-xs text-outline/50 dark:text-outline/40 font-mono tracking-wide">
-                      binary_search.cpp
-                    </div>
-                    <div className="w-12"></div>
+            {/* Right rail: this visitor's own progress, then the three steps. */}
+            <div className="flex flex-col gap-6 lg:col-span-5">
+
+              <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-card">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="font-headline-sm text-headline-sm text-primary">Your DSA path</h3>
+                    <p className="mt-0.5 font-body-sm text-body-sm text-on-surface-variant">
+                      {completedCount} of {dsaTopics.length} topics complete
+                    </p>
                   </div>
-                  <div className="p-6 overflow-x-auto no-scrollbar">
-                    <pre className="font-mono text-xs md:text-sm text-[#F8F8F2] leading-relaxed tracking-normal scrollbar-none">
-                      <code>
-                        <span className="text-[#6272A4] block mb-2">// Time Complexity: O(log N) | Space Complexity: O(1)</span>
-                        <span className="text-[#FF79C6]">int</span> <span className="text-[#50FA7B]">binarySearch</span>(<span className="text-[#8BE9FD]">int</span> arr[], <span className="text-[#8BE9FD]">int</span> l, <span className="text-[#8BE9FD]">int</span> r, <span className="text-[#8BE9FD]">int</span> x) {"{"}
-                        {"\n"}{"  "}<span className="text-[#FF79C6]">while</span> (l &lt;= r) {"{"}
-                        {"\n"}{"    "}<span className="text-[#FF79C6]">int</span> mid = l + (r - l) / <span className="text-[#BD93F9]">2</span>;
-                        {"\n"}
-                        {"\n"}{"    "}<span className="text-[#FF79C6]">if</span> (arr[mid] == x)
-                        {"\n"}{"      "}<span className="text-[#FF79C6]">return</span> mid;
-                        {"\n"}
-                        {"\n"}{"    "}<span className="text-[#FF79C6]">if</span> (arr[mid] &lt; x)
-                        {"\n"}{"      "}l = mid + <span className="text-[#BD93F9]">1</span>;
-                        {"\n"}{"    "}<span className="text-[#FF79C6]">else</span>
-                        {"\n"}{"      "}r = mid - <span className="text-[#BD93F9]">1</span>;
-                        {"\n"}{"  "}{"}"}
-                        {"\n"}{"  "}<span className="text-[#FF79C6]">return</span> -<span className="text-[#BD93F9]">1</span>;
-                        {"\n"}{"}"}
-                      </code>
-                    </pre>
-                    {/* Try it Live Interactive Button */}
-                    <div className="absolute bottom-4 right-4 z-20">
-                      <Link href="/compiler" className="bg-secondary/10 hover:bg-secondary/25 border border-secondary/30 text-secondary font-mono text-xs px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(0,107,92,0.4)] backdrop-blur-sm">
-                        <span className="w-2 h-2 rounded-full bg-secondary animate-pulse shadow-[0_0_8px_rgba(0,107,92,0.8)]"></span>
-                        Try it Live
-                        <span className="material-symbols-outlined text-[14px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  <span className="shrink-0 rounded-lg bg-secondary/10 px-2.5 py-1 font-headline-sm text-headline-sm text-secondary">
+                    {progressPct}%
+                  </span>
+                </div>
+
+                <div
+                  className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-surface-container-high"
+                  role="progressbar"
+                  aria-valuenow={progressPct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="DSA topics completed"
+                >
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-secondary to-tertiary transition-all duration-700 ease-out-expo"
+                    style={{ width: `${progressPct}%` }}
+                  ></div>
+                </div>
+
+                {/* Node flow — derived from the real syllabus and this visitor's own
+                    progress, so the card can never disagree with /dsa. */}
+                <div className="no-scrollbar mt-5 flex items-start justify-between gap-1 overflow-x-auto">
+                  {roadmap.map((node, idx) => (
+                    <Fragment key={node.id}>
+                      {idx > 0 && (
+                        <div
+                          className={`mt-[17px] h-0.5 min-w-[10px] flex-1 rounded-full ${
+                            node.status === 'upcoming' ? 'bg-outline-variant' : 'bg-secondary/50'
+                          }`}
+                        ></div>
+                      )}
+
+                      <Link
+                        href={`/dsa/${node.slug}`}
+                        aria-label={`${node.title} — ${node.status === 'done' ? 'completed' : node.status === 'active' ? 'up next' : 'not started'}`}
+                        className="group flex shrink-0 flex-col items-center gap-1.5"
+                      >
+                        {node.status === 'done' && (
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-on-secondary shadow-brand">
+                            <span className="material-symbols-outlined filled text-[18px]">check</span>
+                          </span>
+                        )}
+                        {node.status === 'active' && (
+                          <span className="flex h-9 w-9 animate-active-pulse items-center justify-center rounded-full bg-secondary/10 text-secondary ring-2 ring-secondary">
+                            <span className="material-symbols-outlined text-[18px]">{node.icon}</span>
+                          </span>
+                        )}
+                        {node.status === 'upcoming' && (
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant ring-1 ring-outline-variant transition-colors group-hover:text-secondary">
+                            <span className="material-symbols-outlined text-[18px]">{node.icon}</span>
+                          </span>
+                        )}
+                        <span
+                          className={`whitespace-nowrap text-[11px] font-semibold tracking-wide ${
+                            node.status === 'upcoming' ? 'text-on-surface-variant' : 'text-secondary'
+                          }`}
+                        >
+                          {node.label}
+                        </span>
                       </Link>
-                    </div>
-                  </div>
+                    </Fragment>
+                  ))}
                 </div>
-                {/* Code Caption */}
-                <div className="text-xs text-on-surface-variant/70 mt-4 pl-1 border-l-2 border-secondary/40 font-body-sm relative z-10">
-                  Write clean C++ solutions with instant syntactic visual feedback and pattern recognition.
-                </div>
-              </div>
 
-              {/* Right Column: Stacked Cards */}
-              <div className="flex flex-col gap-8">
-                
-                {/* Card 1: Roadmap Card */}
-                <div className="bg-[#0D1117] border border-white/10 rounded-xl p-6 shadow-xl hover:shadow-[0_15px_30px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all duration-300 text-white flex flex-col gap-4">
-                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                    <span className="text-xs font-bold tracking-[0.1em] uppercase text-outline/60">Guided Curriculum</span>
-                    <span className="text-xs text-secondary font-semibold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
-                      DSA Roadmap
+                {/* Designed zero / done states rather than a line of grey text. */}
+                {nextTopic ? (
+                  <Link
+                    href={`/dsa/${nextTopic.slug}`}
+                    className="group mt-5 flex items-center gap-3 rounded-xl border border-outline-variant bg-surface-container-low p-3 transition-colors duration-200 hover:border-secondary/50 hover:bg-secondary/5"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-on-secondary">
+                      <span className="material-symbols-outlined text-[20px]">play_arrow</span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-label-md text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">
+                        {completedCount > 0 ? 'Next up' : 'Start here'}
+                      </span>
+                      <span className="block truncate font-body-md text-body-md font-semibold text-primary">
+                        {nextTopic.title}
+                      </span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-surface-container-high px-2.5 py-1 font-body-sm text-body-sm text-on-surface-variant">
+                      {nextTopic.estimatedTime}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="mt-5 flex items-center gap-3 rounded-xl border border-secondary/40 bg-secondary/10 p-3">
+                    <span className="material-symbols-outlined filled text-[22px] text-secondary">workspace_premium</span>
+                    <span className="font-body-md text-body-md font-semibold text-primary">
+                      All {dsaTopics.length} topics complete — nice work.
                     </span>
                   </div>
-                  
-                  {/* Nodes Flow */}
-                  <div className="flex items-center justify-between gap-1.5 w-full py-2">
-                    {/* Arrays */}
-                    <div className="flex flex-col items-center gap-1.5 shrink-0">
-                      <div className="w-9 h-9 rounded-full bg-secondary/25 border border-secondary/60 text-white flex items-center justify-center shadow-[0_0_10px_rgba(0,107,92,0.1)]">
-                        <span className="material-symbols-outlined filled text-[17px]">check_circle</span>
-                      </div>
-                      <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">Arrays</span>
-                    </div>
-                    
-                    {/* Line */}
-                    <div className="flex-1 h-[2px] bg-secondary/60 min-w-[12px] md:min-w-[20px] -mt-5"></div>
-
-                    {/* Trees */}
-                    <div className="flex flex-col items-center gap-1.5 shrink-0">
-                      <div className="w-9 h-9 rounded-full bg-secondary/25 border border-secondary/60 text-white flex items-center justify-center shadow-[0_0_10px_rgba(0,107,92,0.1)]">
-                        <span className="material-symbols-outlined filled text-[17px]">check_circle</span>
-                      </div>
-                      <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">Trees</span>
-                    </div>
-
-                    {/* Line */}
-                    <div className="flex-1 h-[2px] bg-gradient-to-r from-secondary/60 to-secondary/80 min-w-[12px] md:min-w-[20px] -mt-5"></div>
-
-                    {/* Graphs */}
-                    <div className="flex flex-col items-center gap-1.5 shrink-0 relative">
-                      <div className="w-10 h-10 rounded-full bg-[#0D1117] border-2 border-secondary text-secondary flex items-center justify-center shadow-[0_0_15px_rgba(0,107,92,0.3)] animate-active-pulse">
-                        <span className="material-symbols-outlined text-[16px]">explore</span>
-                      </div>
-                      <span className="text-[11px] font-extrabold text-secondary uppercase tracking-wider">Graphs</span>
-                    </div>
-
-                    {/* Line */}
-                    <div className="flex-1 h-[2px] bg-gradient-to-r from-secondary/80 to-white/10 min-w-[12px] md:min-w-[20px] -mt-5"></div>
-
-                    {/* DP */}
-                    <div className="flex flex-col items-center gap-1.5 shrink-0 opacity-40">
-                      <div className="w-9 h-9 rounded-full bg-white/5 border border-white/15 text-outline flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[14px]">lock</span>
-                      </div>
-                      <span className="text-[11px] font-bold text-outline uppercase tracking-wider">DP</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-outline-variant/60 w-full my-1"></div>
-
-                {/* Card 2: Progress Tracker Card */}
-                <div className="bg-gradient-to-br from-surface-container-lowest via-surface-container-lowest to-secondary/[0.03] border border-outline-variant rounded-xl p-6 shadow-2xl hover:shadow-[0_20px_40px_rgba(0,107,92,0.1)] hover:-translate-y-1 transition-all duration-500 relative overflow-hidden flex flex-col gap-4">
-                  <div className="flex flex-col gap-1">
-                    <h3 className="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">
-                      DSA Path Mastery: 65% Completed
-                    </h3>
-                    <span className="text-sm font-semibold text-secondary/90 tracking-wide mt-1">
-                      18 / 28 Modules Completed
-                    </span>
-                  </div>
-
-                  {/* Progress Bar Container */}
-                  <div className="w-full bg-surface-container-high dark:bg-surface-container rounded-full h-3 border border-outline-variant/10 overflow-hidden p-[2px]">
-                    <div 
-                      className="h-full bg-gradient-to-r from-secondary via-secondary-fixed to-[#008d7c] rounded-full shadow-[0_0_12px_rgba(0,107,92,0.35)]"
-                      style={{ width: '65%' }}
-                    ></div>
-                  </div>
-
-                  {/* Next Milestone Tag */}
-                  <div className="text-xs text-on-surface-variant/80 font-medium flex items-center gap-1.5 mt-3">
-                    <span className="material-symbols-outlined text-sm text-secondary animate-pulse">flag</span>
-                    Next Milestone: Graphs
-                  </div>
-                </div>
-
+                )}
               </div>
+
+              {/* Numbered steps: the loop the whole site is built around. */}
+              <ol className="divide-y divide-outline-variant rounded-2xl border border-outline-variant bg-surface-container-lowest px-5 shadow-card">
+                {[
+                  { n: '01', title: 'Read the concept', body: 'Intuition first, then the complexity table and the mistakes people actually make.' },
+                  { n: '02', title: 'Run the code', body: 'Open any snippet in the in-browser compiler and break it on purpose.' },
+                  { n: '03', title: 'Check yourself', body: `Topic quizzes plus ${interviewQuestions.length} interview questions with worked answers.` }
+                ].map(step => (
+                  <li key={step.n} className="flex gap-4 py-4">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary/10 font-mono text-xs font-bold text-secondary ring-1 ring-secondary/25">
+                      {step.n}
+                    </span>
+                    <span>
+                      <span className="block font-body-md text-body-md font-semibold text-primary">{step.title}</span>
+                      <span className="block font-body-sm text-body-sm text-on-surface-variant">{step.body}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
 
             </div>
-
           </div>
         </section>
 
-        {/* Learning Paths Section (Bento Grid Style) */}
-        <section className="py-xl border-t border-outline-variant relative z-10">
-          <div className="flex flex-col gap-xl">
-            <div className="flex flex-col gap-sm border-l-4 border-secondary pl-sm">
-              <h2 className="font-headline-lg text-headline-lg text-primary font-bold tracking-tight">Learning Paths</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
-                Curated roadmaps designed to take you from foundational syntax to advanced algorithmic problem solving.
+        {/* ── Learning paths ───────────────────────────────────────────────── */}
+        <section className="border-t border-outline-variant py-12 md:py-16">
+          <div className="flex max-w-2xl flex-col gap-3">
+            <span className="inline-flex items-center gap-2 font-label-md text-label-md uppercase tracking-[0.14em] text-secondary">
+              <span className="h-px w-6 bg-secondary/60"></span>
+              Learning paths
+            </span>
+            <h2 className="font-headline-lg text-headline-lg-mobile text-primary md:text-headline-lg">
+              Three tracks, one sensible order
+            </h2>
+            <p className="max-w-prose font-body-md text-body-md text-on-surface-variant">
+              Learn the language, then the structures built with it, then rehearse explaining both
+              out loud. Take them in order or jump straight to what you need.
+            </p>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+
+            {/* Path 1 — C++ */}
+            <Link
+              href="/cpp"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-card transition-all duration-300 ease-out-expo hover:-translate-y-1 hover:border-topic-blue/40 hover:shadow-card-hover"
+            >
+              <span className="absolute inset-x-0 top-0 h-1 bg-topic-blue"></span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-topic-blue/15 text-topic-blue ring-1 ring-topic-blue/30">
+                <CppMark className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 font-headline-md text-headline-md text-primary">C++ Foundations</h3>
+              <p className="mt-2 font-body-sm text-body-sm text-on-surface-variant">
+                Types, control flow, functions, pointers and the STL — the language you will write
+                every algorithm in.
+              </p>
+              <ul className="mt-4 flex flex-wrap gap-1.5">
+                {cppModules.slice(0, 4).map(m => (
+                  <li
+                    key={m.id}
+                    className="rounded-full border border-outline-variant bg-surface-container-low px-2.5 py-1 font-body-sm text-body-sm text-on-surface-variant"
+                  >
+                    {m.title}
+                  </li>
+                ))}
+                {cppModules.length > 4 && (
+                  <li className="rounded-full border border-outline-variant bg-surface-container-low px-2.5 py-1 font-body-sm text-body-sm text-on-surface-variant">
+                    +{cppModules.length - 4} more
+                  </li>
+                )}
+              </ul>
+              <div className="mt-auto flex w-full items-center justify-between border-t border-outline-variant pt-4 text-on-surface-variant">
+                <span className="font-label-md text-label-md">{cppModules.length} modules</span>
+                <span className="material-symbols-outlined transition-all group-hover:translate-x-1 group-hover:text-topic-blue">arrow_forward</span>
+              </div>
+            </Link>
+
+            {/* Path 2 — DSA. Filled in the brand colour so one card in the row is
+                unambiguously the recommended starting point. */}
+            <Link
+              href="/dsa"
+              className="group relative flex flex-col overflow-hidden rounded-2xl bg-secondary p-6 text-on-secondary shadow-brand transition-all duration-300 ease-out-expo hover:-translate-y-1 hover:shadow-brand-hover"
+            >
+              <span className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-on-secondary/10 transition-transform duration-500 group-hover:scale-150"></span>
+              <span className="relative flex items-center justify-between gap-2">
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-on-secondary/15 ring-1 ring-on-secondary/25">
+                  <span className="material-symbols-outlined text-[26px]">account_tree</span>
+                </span>
+                <span className="rounded-full bg-on-secondary/20 px-2.5 py-1 font-label-md text-[11px] font-bold uppercase tracking-[0.1em]">
+                  Start here
+                </span>
+              </span>
+              <h3 className="relative mt-4 font-headline-md text-headline-md">Data Structures &amp; Algorithms</h3>
+              <p className="relative mt-2 font-body-sm text-body-sm text-on-secondary/90">
+                Arrays through dynamic programming, each with the trade-off that makes it worth
+                knowing — not just the syntax.
+              </p>
+              <ul className="relative mt-4 flex flex-wrap gap-1.5">
+                {dsaTopics.slice(0, 4).map(t => (
+                  <li
+                    key={t.id}
+                    className="rounded-full bg-on-secondary/15 px-2.5 py-1 font-body-sm text-body-sm"
+                  >
+                    {ROADMAP_LABELS[t.id] || t.title}
+                  </li>
+                ))}
+                {dsaTopics.length > 4 && (
+                  <li className="rounded-full bg-on-secondary/15 px-2.5 py-1 font-body-sm text-body-sm">
+                    +{dsaTopics.length - 4} more
+                  </li>
+                )}
+              </ul>
+              <div className="relative mt-auto flex w-full items-center justify-between border-t border-on-secondary/25 pt-4">
+                <span className="font-label-md text-label-md">{dsaTopics.length} topics</span>
+                <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
+              </div>
+            </Link>
+
+            {/* Path 3 — Interview prep */}
+            <Link
+              href="/interview-prep"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-card transition-all duration-300 ease-out-expo hover:-translate-y-1 hover:border-tertiary/40 hover:shadow-card-hover"
+            >
+              <span className="absolute inset-x-0 top-0 h-1 bg-tertiary"></span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-tertiary/15 text-tertiary ring-1 ring-tertiary/30">
+                <span className="material-symbols-outlined text-[26px]">forum</span>
+              </span>
+              <h3 className="mt-4 font-headline-md text-headline-md text-primary">Interview Prep</h3>
+              <p className="mt-2 font-body-sm text-body-sm text-on-surface-variant">
+                The questions that keep coming back, each with a hint first and a full sample answer
+                after you have tried.
+              </p>
+              <ul className="mt-4 flex flex-wrap gap-1.5">
+                {interviewQuestions.slice(0, 3).map(q => (
+                  <li
+                    key={q.id}
+                    className="rounded-full border border-outline-variant bg-surface-container-low px-2.5 py-1 font-body-sm text-body-sm text-on-surface-variant"
+                  >
+                    {q.topic}
+                  </li>
+                ))}
+                <li className="rounded-full border border-outline-variant bg-surface-container-low px-2.5 py-1 font-body-sm text-body-sm text-on-surface-variant">
+                  hints + answers
+                </li>
+              </ul>
+              <div className="mt-auto flex w-full items-center justify-between border-t border-outline-variant pt-4 text-on-surface-variant">
+                <span className="font-label-md text-label-md">{interviewQuestions.length} questions</span>
+                <span className="material-symbols-outlined transition-all group-hover:translate-x-1 group-hover:text-tertiary">arrow_forward</span>
+              </div>
+            </Link>
+          </div>
+        </section>
+
+        {/* ── The DSA syllabus, colour-coded ───────────────────────────────── */}
+        <section className="border-t border-outline-variant py-12 md:py-16">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="flex max-w-2xl flex-col gap-3">
+              <span className="inline-flex items-center gap-2 font-label-md text-label-md uppercase tracking-[0.14em] text-secondary">
+                <span className="h-px w-6 bg-secondary/60"></span>
+                What you will actually learn
+              </span>
+              <h2 className="font-headline-lg text-headline-lg-mobile text-primary md:text-headline-lg">
+                The {dsaTopics.length} DSA topics, in order
+              </h2>
+              <p className="max-w-prose font-body-md text-body-md text-on-surface-variant">
+                Each one carries its difficulty, a realistic reading time and the complexity that
+                defines it. Colours stay consistent everywhere the topic appears.
               </p>
             </div>
+            <Link
+              href="/dsa"
+              className="group inline-flex shrink-0 items-center gap-1.5 font-label-md text-label-md text-secondary transition-colors hover:text-primary"
+            >
+              See the full syllabus
+              <span className="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+            </Link>
+          </div>
 
-            {/* Horizontal Auto-Scrolling Carousel */}
-            <div className="relative w-full overflow-hidden py-10 my-8 pointer-events-auto select-none border-y border-outline-variant bg-[radial-gradient(circle_at_center,rgba(0,107,92,0.03)_0%,transparent_75%)]">
-              <style>{`
-                @keyframes marquee-scroll {
-                  0% {
-                    transform: translateX(0);
-                  }
-                  100% {
-                    transform: translateX(-50%);
-                  }
-                }
-                .animate-marquee {
-                  display: flex;
-                  width: max-content;
-                  animation: marquee-scroll 25s linear infinite;
-                }
-                .animate-marquee:hover {
-                  animation-play-state: paused;
-                }
-              `}</style>
-              
-              {/* Centered Heading Label Above Logos */}
-              <div className="text-center font-label-md text-[11px] md:text-[12px] text-on-surface-variant/50 dark:text-outline/40 tracking-[0.15em] uppercase mb-lg font-bold">
-                Loved by developers. Trusted by engineering leaders.
-              </div>
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {dsaTopics.map(topic => {
+              const accent = TOPIC_ACCENTS[topic.id] || TOPIC_ACCENT_FALLBACK
+              const isDone = done.has(topic.id)
+              // Search cost is what people compare structures on; DP and graphs
+              // list it as N/A, so fall back to the space cost there.
+              const complexity = topic.complexity?.search && topic.complexity.search !== 'N/A'
+                ? { label: 'search', value: topic.complexity.search }
+                : { label: 'space', value: topic.complexity?.space }
 
-              <div className="relative w-full">
-                {/* Fade Edges Gradient Overlays (Left/Right) for Premium Feel */}
-                <div className="absolute top-0 left-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
-                <div className="absolute top-0 right-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
+              return (
+                <Link
+                  key={topic.id}
+                  href={`/dsa/${topic.slug}`}
+                  className={`group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 pt-6 shadow-card transition-all duration-300 ease-out-expo hover:-translate-y-1 hover:shadow-card-hover ${accent.hover}`}
+                >
+                  <span className={`absolute inset-x-0 top-0 h-1 ${accent.rail}`}></span>
 
-                 {/* Scroll Container */}
-                <div className="w-full overflow-x-auto scrollbar-none flex">
-                  <div className="animate-marquee flex gap-16 md:gap-28 py-xs items-center">
-                    {/* First list */}
-                    {languages.map((lang, idx) => (
-                      <div 
-                        key={`list1-${idx}`} 
-                        className="flex items-center gap-4 text-on-surface-variant/80 dark:text-outline/70 hover:text-primary dark:hover:text-white hover:scale-110 transition-all duration-300 cursor-pointer whitespace-nowrap"
-                      >
-                        {lang.icon}
-                        <span className="font-label-md text-base md:text-lg font-bold tracking-wide">
-                          {lang.name}
-                        </span>
-                      </div>
-                    ))}
-                    {/* Second identical list for loop */}
-                    {languages.map((lang, idx) => (
-                      <div 
-                        key={`list2-${idx}`} 
-                        className="flex items-center gap-4 text-on-surface-variant/80 dark:text-outline/70 hover:text-primary dark:hover:text-white hover:scale-110 transition-all duration-300 cursor-pointer whitespace-nowrap"
-                      >
-                        {lang.icon}
-                        <span className="font-label-md text-base md:text-lg font-bold tracking-wide">
-                          {lang.name}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="flex items-start justify-between gap-3">
+                    <span className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${accent.tile}`}>
+                      <span className="material-symbols-outlined text-[22px]">{topic.iconName}</span>
+                    </span>
+                    <span className="font-mono text-xs font-bold text-on-surface-variant">
+                      {String(topic.order).padStart(2, '0')}
+                    </span>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-              {/* Path 1 */}
-              <Link href="/cpp" className="bg-surface-container-lowest border border-outline-variant hover:border-secondary/40 rounded-xl p-lg flex flex-col gap-md hover:shadow-[0px_16px_32px_rgba(11,31,58,0.08)] hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-fixed-dim opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="material-symbols-outlined text-secondary text-4xl">data_object</span>
-                <div className="flex flex-col gap-sm">
-                  <h3 className="font-headline-md text-headline-md text-primary font-bold tracking-tight">C++ Mastery</h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    Deep dive into modern C++ syntax, memory management, and OOP principles. Build a rock-solid foundation.
+                  <h3 className="mt-4 font-headline-sm text-headline-sm text-primary">{topic.title}</h3>
+                  <p className="mt-1.5 line-clamp-2 font-body-sm text-body-sm text-on-surface-variant">
+                    {topic.description}
                   </p>
-                </div>
-                <div className="mt-auto pt-md flex items-center justify-between border-t border-outline-variant text-on-surface-variant w-full">
-                  <span className="font-label-md text-label-md">12 Modules</span>
-                  <span className="material-symbols-outlined group-hover:text-secondary group-hover:translate-x-1 transition-all">arrow_forward</span>
-                </div>
-              </Link>
-              {/* Path 2 */}
-              <Link href="/dsa" className="bg-surface-container-lowest border border-outline-variant hover:border-secondary/40 rounded-xl p-lg flex flex-col gap-md hover:shadow-[0px_16px_32px_rgba(11,31,58,0.08)] hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-secondary-fixed opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="material-symbols-outlined text-secondary text-4xl">account_tree</span>
-                <div className="flex flex-col gap-sm">
-                  <h3 className="font-headline-md text-headline-md text-primary font-bold tracking-tight">Data Structures</h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    Master arrays, linked lists, trees, and graphs. Understand the 'why' behind algorithmic efficiency.
-                  </p>
-                </div>
-                <div className="mt-auto pt-md flex items-center justify-between border-t border-outline-variant text-on-surface-variant w-full">
-                  <span className="font-label-md text-label-md">24 Modules</span>
-                  <span className="material-symbols-outlined group-hover:text-secondary group-hover:translate-x-1 transition-all">arrow_forward</span>
-                </div>
-              </Link>
-              {/* Path 3 */}
-              <Link href="/interview-prep" className="bg-surface-container-lowest border border-outline-variant hover:border-secondary/40 rounded-xl p-lg flex flex-col gap-md hover:shadow-[0px_16px_32px_rgba(11,31,58,0.08)] hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-tertiary-fixed opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500"></div>
-                <span className="material-symbols-outlined text-secondary text-4xl">work</span>
-                <div className="flex flex-col gap-sm">
-                  <h3 className="font-headline-md text-headline-md text-primary font-bold tracking-tight">Interview Prep</h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    Pattern-based problem solving targeted for top tech company interviews. Practice with real-world scenarios.
-                  </p>
-                </div>
-                <div className="mt-auto pt-md flex items-center justify-between border-t border-outline-variant text-on-surface-variant w-full">
-                  <span className="font-label-md text-label-md">18 Modules</span>
-                  <span className="material-symbols-outlined group-hover:text-secondary group-hover:translate-x-1 transition-all">arrow_forward</span>
-                </div>
-              </Link>
-            </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-1.5">
+                    <span className={`rounded-full px-2.5 py-1 font-label-md text-[12px] font-semibold capitalize ${DIFFICULTY_BADGES[topic.difficulty] || 'bg-surface-container-high text-on-surface-variant'}`}>
+                      {topic.difficulty}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-outline-variant px-2.5 py-1 font-body-sm text-[12px] text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[14px]">schedule</span>
+                      {topic.estimatedTime}
+                    </span>
+                    {complexity.value && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-outline-variant px-2.5 py-1 font-mono text-[12px] text-on-surface-variant">
+                        {complexity.label} {complexity.value}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between border-t border-outline-variant pt-3">
+                    {isDone ? (
+                      <span className="inline-flex items-center gap-1.5 font-label-md text-label-md text-secondary">
+                        <span className="material-symbols-outlined filled text-[16px]">check_circle</span>
+                        Completed
+                      </span>
+                    ) : (
+                      <span className="font-label-md text-label-md text-on-surface-variant">{topic.badge}</span>
+                    )}
+                    <span className="material-symbols-outlined text-on-surface-variant transition-all group-hover:translate-x-1 group-hover:text-secondary">arrow_forward</span>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </section>
 
-        {/* Features Section */}
-        <section className="py-xl border-t border-outline-variant relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
-            <div className="flex flex-col gap-lg">
-              <div className="flex flex-col gap-xs border-l-4 border-secondary pl-sm">
-                <h2 className="font-headline-lg text-headline-lg text-primary font-bold tracking-tight">Why Programo?</h2>
-              </div>
-              <div className="flex flex-col gap-md">
-                <div className="flex gap-md items-start group">
-                  <div className="p-sm bg-surface-container-high rounded flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <span className="material-symbols-outlined text-primary animate-pulse">psychology</span>
+        {/* ── Why Programo ─────────────────────────────────────────────────── */}
+        <section className="border-t border-outline-variant py-12 md:py-16">
+          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
+            <div className="flex flex-col gap-3">
+              <span className="inline-flex items-center gap-2 font-label-md text-label-md uppercase tracking-[0.14em] text-secondary">
+                <span className="h-px w-6 bg-secondary/60"></span>
+                Why Programo
+              </span>
+              <h2 className="font-headline-lg text-headline-lg-mobile text-primary md:text-headline-lg">
+                Understanding, not memorising
+              </h2>
+
+              <div className="mt-4 flex flex-col gap-3">
+                {[
+                  {
+                    icon: 'psychology',
+                    tile: 'bg-tertiary/15 text-tertiary ring-tertiary/25',
+                    title: 'Code intuition',
+                    body: 'Every topic starts with why the structure exists and what it trades away — the mental model comes before the syntax.'
+                  },
+                  {
+                    icon: 'map',
+                    tile: 'bg-secondary/15 text-secondary ring-secondary/25',
+                    title: 'Structured roadmaps',
+                    body: 'No decision fatigue. The path is linear, ordered and always tells you the single next thing to open.'
+                  },
+                  {
+                    icon: 'terminal',
+                    tile: 'bg-topic-blue/15 text-topic-blue ring-topic-blue/25',
+                    title: 'Live practice',
+                    body: 'Compile and run C++ in the browser while the concept is still fresh, without installing a toolchain.'
+                  }
+                ].map(feature => (
+                  <div
+                    key={feature.title}
+                    className="group flex items-start gap-4 rounded-xl border border-transparent p-3 transition-colors duration-200 hover:border-outline-variant hover:bg-surface-container-lowest"
+                  >
+                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 transition-transform duration-300 group-hover:scale-105 ${feature.tile}`}>
+                      <span className="material-symbols-outlined text-[22px]">{feature.icon}</span>
+                    </span>
+                    <div>
+                      <h3 className="font-headline-sm text-headline-sm text-primary">{feature.title}</h3>
+                      <p className="mt-0.5 max-w-prose font-body-md text-body-md text-on-surface-variant">{feature.body}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-headline-md text-headline-md text-primary mb-xs font-bold tracking-tight">Code Intuition</h4>
-                    <p className="font-body-md text-body-md text-on-surface-variant">We focus on building a mental model for problem solving, not just memorizing syntax.</p>
-                  </div>
-                </div>
-                <div className="flex gap-md items-start group">
-                  <div className="p-sm bg-surface-container-high rounded flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <span className="material-symbols-outlined text-primary">map</span>
-                  </div>
-                  <div>
-                    <h4 className="font-headline-md text-headline-md text-primary mb-xs font-bold tracking-tight">Structured Roadmaps</h4>
-                    <p className="font-body-md text-body-md text-on-surface-variant">Eliminate decision fatigue. Our linear paths guide you exactly on what to learn next.</p>
-                  </div>
-                </div>
-                <div className="flex gap-md items-start group">
-                  <div className="p-sm bg-surface-container-high rounded flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <span className="material-symbols-outlined text-primary">terminal</span>
-                  </div>
-                  <div>
-                    <h4 className="font-headline-md text-headline-md text-primary mb-xs font-bold tracking-tight">Live Practice</h4>
-                    <p className="font-body-md text-body-md text-on-surface-variant">Apply concepts immediately in our built-in coding environments to solidify understanding.</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
-            {/* Abstract Interactive Element */}
-            <div className="bg-surface-container-lowest border border-outline-variant hover:border-secondary/30 rounded-xl p-lg h-96 flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-surface-container-high via-surface-container-lowest to-surface-container-lowest opacity-50 pointer-events-none"></div>
-              <div className="flex justify-between items-center border-b border-outline-variant pb-sm mb-md relative z-10">
-                <div className="flex gap-xs">
-                  <div className="w-3 h-3 rounded-full bg-error opacity-50"></div>
-                  <div className="w-3 h-3 rounded-full bg-secondary opacity-50"></div>
-                  <div className="w-3 h-3 rounded-full bg-outline opacity-50"></div>
+
+            {/* Second dark code panel, matching the first: code always sits on a
+                dark field on this page, in both themes. */}
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0D1117] shadow-lifted">
+              <div className="flex items-center gap-3 border-b border-white/10 bg-[#161B22] px-4 py-3">
+                <div className="flex gap-2">
+                  <span className="h-3 w-3 rounded-full bg-[#FF5F56]"></span>
+                  <span className="h-3 w-3 rounded-full bg-[#FFBD2E]"></span>
+                  <span className="h-3 w-3 rounded-full bg-[#27C93F]"></span>
                 </div>
-                <span className="font-code-block text-code-block text-on-surface-variant">main.cpp</span>
+                <span className="flex-1 text-center font-mono text-xs tracking-wide text-[#8B949E]">main.cpp</span>
+                <span className="w-12"></span>
               </div>
-              <div className="font-code-block text-code-block text-on-surface-variant flex-grow relative z-10">
-                <span className="text-primary opacity-70">#include</span> &lt;iostream&gt;<br/>
-                <span className="text-primary opacity-70">#include</span> &lt;vector&gt;<br/><br/>
-                <span className="text-secondary">int</span> <span className="text-primary">main</span>() &#123;<br/>
-                &nbsp;&nbsp;<span className="text-secondary">std::vector</span>&lt;<span className="text-secondary">int</span>&gt; path = &#123;<span className="text-secondary-container text-on-secondary-container px-1 rounded">1</span>, <span className="text-secondary-container text-on-secondary-container px-1 rounded">2</span>, <span className="text-secondary-container text-on-secondary-container px-1 rounded">3</span>&#125;;<br/>
-                &nbsp;&nbsp;<span className="text-outline italic">// Master the fundamentals</span><br/>
-                &nbsp;&nbsp;<span className="text-secondary">return</span> <span className="text-secondary-container text-on-secondary-container px-1 rounded">0</span>;<br/>
+
+              <div className="p-5 font-mono text-xs leading-relaxed text-[#F8F8F2] md:p-6 md:text-sm">
+                <span className="text-[#FF79C6]">#include</span> &lt;iostream&gt;<br />
+                <span className="text-[#FF79C6]">#include</span> &lt;vector&gt;<br /><br />
+                <span className="text-[#8BE9FD]">int</span> <span className="text-[#50FA7B]">main</span>() &#123;<br />
+                &nbsp;&nbsp;<span className="text-[#8BE9FD]">std::vector</span>&lt;<span className="text-[#8BE9FD]">int</span>&gt; path = &#123;
+                {/* Was `text-secondary-container text-on-secondary-container` — two
+                    text colours on one element, so the highlight never rendered.
+                    The first was meant to be the background. */}
+                <span className="rounded-sm bg-secondary-container px-1 text-on-secondary-container">1</span>,{' '}
+                <span className="rounded-sm bg-secondary-container px-1 text-on-secondary-container">2</span>,{' '}
+                <span className="rounded-sm bg-secondary-container px-1 text-on-secondary-container">3</span>&#125;;<br />
+                &nbsp;&nbsp;<span className="italic text-[#7F8DB8]">// Master the fundamentals</span><br />
+                &nbsp;&nbsp;<span className="text-[#FF79C6]">return</span>{' '}
+                <span className="rounded-sm bg-secondary-container px-1 text-on-secondary-container">0</span>;<br />
                 &#125;
               </div>
-              <button className="bg-primary text-on-primary font-label-md text-label-md px-md py-sm rounded w-fit self-end mt-md hover:bg-primary-container transition-all hover:scale-105 active:scale-95 duration-200 relative z-10 flex items-center gap-xs shadow-[0_0_15px_rgba(11,31,58,0.1)]">
-                <span className="material-symbols-outlined text-sm">play_arrow</span>
-                Run Code
-              </button>
+
+              <div className="flex items-center justify-between gap-3 border-t border-white/10 bg-[#0B0F16] px-4 py-3">
+                <span className="font-mono text-[11px] text-[#8B949E]">compiled in the browser</span>
+                {/* Was bg-primary with hover:bg-primary-container: in light mode that
+                    hover swapped a near-black fill for a pale mint one while the label
+                    stayed white, so the button read as blank on hover. */}
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-4 py-2 font-label-md text-label-md text-on-secondary shadow-brand transition-all duration-200 hover:brightness-110 hover:shadow-brand-hover active:scale-95"
+                >
+                  <span className="material-symbols-outlined filled text-[16px]">play_arrow</span>
+                  Run code
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Closing call to action ───────────────────────────────────────── */}
+        <section className="pt-4">
+          <div className="relative overflow-hidden rounded-3xl bg-brand-gradient px-6 py-10 text-center text-on-secondary shadow-lifted md:px-12 md:py-12">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-on-secondary/10"></div>
+            <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-on-secondary/10"></div>
+            <h2 className="relative font-headline-lg text-headline-lg-mobile md:text-headline-lg">
+              Start with Arrays. Ten minutes.
+            </h2>
+            <p className="relative mx-auto mt-3 max-w-xl font-body-md text-body-md text-on-secondary/90">
+              No sign-up, no paywall, no trial. Open the first topic and see whether this explains
+              it better than the last thing you read.
+            </p>
+            <div className="relative mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Link
+                href="/dsa"
+                className="group inline-flex items-center justify-center gap-2 rounded-lg bg-on-secondary px-7 py-4 font-label-md text-base font-bold text-secondary transition-transform duration-200 ease-out-expo hover:-translate-y-0.5"
+              >
+                Open the syllabus
+                <span className="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+              </Link>
+              <Link
+                href="/compiler"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-on-secondary/40 px-7 py-4 font-label-md text-base font-semibold text-on-secondary transition-colors duration-200 hover:bg-on-secondary/15"
+              >
+                <span className="material-symbols-outlined text-[20px]">terminal</span>
+                Try the compiler
+              </Link>
             </div>
           </div>
         </section>
